@@ -1,67 +1,32 @@
-# TechTrix'26 — Smart Building Safety Prototype
+# CampusShield — TechTrix'26 Prototype
 
-A one-day React prototype for simulated building monitoring, alerts, emergency SOS records, maintenance requests, and visitor management.
+A React + Vite software prototype for an IoT-based building safety, security, and maintenance monitoring system. The sample campus is fictional and includes six buildings.
 
-## What is included
-
-- Dashboard for three demo buildings
-- Simulated temperature readings and threshold alert trigger
-- Alert acknowledgement
-- SOS form that creates a demo incident record
-- Incident register and close action
-- Maintenance request form and status workflow
-- Visitor register and check-out action
-- Role selector for demonstration purposes
-- Browser `localStorage` persistence
-- Responsive layout for desktop and mobile
+## Features in this prototype
+- Six-building campus overview with status counts and search/filter.
+- Simulated temperature/humidity-style telemetry with configurable demo thresholds.
+- Simulated restricted-zone events and access log entries.
+- Alert acknowledgement and conversion of an alert into an incident.
+- Demo SOS incident form.
+- Maintenance requests, categories, priorities, status updates, and optional inspection photo filename capture.
+- Visitor check-in/check-out and access log.
+- Basic historical activity and maintenance-category summaries.
+- Browser-local persistence through `localStorage`.
 
 ## Important limitations
-
-- Sensor readings and restricted-area events are simulated, not connected to real sensors or CCTV.
-- SOS does not contact emergency services and does not send live location.
-- The role selector is a UI demonstration, **not secure authentication or authorization**.
-- Data is stored only in the current browser profile and is not shared between devices or team members.
-- Do not enter real personal or sensitive information into this prototype.
-
-Before real use, add a backend, real authentication, server-enforced authorization rules, secure file uploads, audit logging, and appropriate privacy/security review.
+This is a software simulation. It does not connect to physical sensors, cameras, access-control hardware, emergency services, push notifications, or live location. SOS does not dispatch help or share location. Photo upload currently records the filename only; image bytes are not uploaded or securely stored. The role selector changes only the displayed demo role and is not authentication or authorization. Data is stored in the current browser only, not shared across devices. Use fictional records only.
 
 ## Run locally
+1. Install Node.js (LTS).
+2. Extract the ZIP and open a terminal in this folder.
+3. Run `npm install`.
+4. Run `npm run dev`.
+5. Open the local URL printed by Vite.
 
-Install Node.js LTS from https://nodejs.org/ if it is not already installed.
+## Production build
+- Run `npm run build`.
+- Vite outputs the production site into `dist/`.
+- For Vercel, Netlify, or Cloudflare Pages, use build command `npm run build` and output directory `dist`.
 
-In a terminal, inside this project folder, run:
-
-```bash
-npm install
-npm run dev
-```
-
-Open the local URL Vite prints (usually `http://localhost:5173`).
-
-## Build check
-
-```bash
-npm run build
-```
-
-The generated production files will be in `dist/`.
-
-## Deploy with Vercel
-
-1. Create a GitHub repository and upload the project files.
-2. Sign in at https://vercel.com/ and import the repository.
-3. Vercel should detect Vite automatically.
-4. Build command: `npm run build`
-5. Output directory: `dist`
-6. Deploy and open the public URL it provides.
-
-## Suggested one-day build order
-
-1. Start the app and confirm the dashboard loads.
-2. Try "Simulate sensor alert" on the overview or Monitoring page.
-3. Test SOS creation and close the resulting incident.
-4. Create a maintenance request and change its status.
-5. Register a visitor and check them out.
-6. Refresh the browser and confirm records persist.
-7. Test on a mobile-sized screen.
-8. Deploy and rehearse a short demo.
+## Suggested next integrations
+A real deployment would require a backend API, shared database, verified sensor gateway (for example MQTT), secure authentication and authorization, privacy/retention controls, secure image storage, and properly configured notification services. Add these only after testing and documenting the integration.
