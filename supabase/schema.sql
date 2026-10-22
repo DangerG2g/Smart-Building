@@ -1,4 +1,4 @@
--- CampusShield schema for Supabase. Run this in Supabase Dashboard > SQL Editor.
+-- SurakshaHub schema for Supabase. Run this in Supabase Dashboard > SQL Editor.
 -- New sign-ups always receive the 'student' role. Change staff/admin roles only as a trusted project owner.
 create extension if not exists pgcrypto;
 
