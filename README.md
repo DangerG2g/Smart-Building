@@ -1,4 +1,4 @@
-# CampusShield — TechTrix'26
+# SurakshaHub — TechTrix'26
 
 Campus safety, maintenance and building operations prototype built with React + Vite + Supabase.
 

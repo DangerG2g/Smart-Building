@@ -8,7 +8,7 @@
 6. Promote verified staff accounts using Supabase SQL Editor, for example:
    `update public.profiles set role = 'maintenance' where id = 'VERIFIED-USER-UUID';`
    Valid roles: `student`, `maintenance`, `security`, `admin`.
-7. For Vercel, set the same two environment variables in the CampusShield project’s Settings → Environment Variables (not just an unattached shared variable group), apply them to Production and Preview as needed, then redeploy. Build command `npm run build`; output folder `dist`.
+7. For Vercel, set the same two environment variables in the SurakshaHub project’s Settings → Environment Variables (not just an unattached shared variable group), apply them to Production and Preview as needed, then redeploy. Build command `npm run build`; output folder `dist`.
 
 Role changes must be made only by a trusted project owner. Do not let users choose their own role at signup. Read README.md for complete setup and troubleshooting.
 
