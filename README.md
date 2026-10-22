@@ -1,32 +1,90 @@
-# CampusShield — TechTrix'26 Prototype
+# CampusShield — TechTrix'26
 
-A React + Vite software prototype for an IoT-based building safety, security, and maintenance monitoring system. The sample campus is fictional and includes six buildings.
+Campus safety, maintenance and building operations prototype built with React + Vite + Supabase.
 
-## Features in this prototype
-- Six-building campus overview with status counts and search/filter.
-- Simulated temperature/humidity-style telemetry with configurable demo thresholds.
-- Simulated restricted-zone events and access log entries.
-- Alert acknowledgement and conversion of an alert into an incident.
-- Demo SOS incident form.
-- Maintenance requests, categories, priorities, status updates, and optional inspection photo filename capture.
-- Visitor check-in/check-out and access log.
-- Basic historical activity and maintenance-category summaries.
-- Browser-local persistence through `localStorage`.
+## Features
+- Supabase email/password authentication and profile lookup.
+- Four role-aware workspaces: Student, Maintenance, Security and Administrator.
+- Student maintenance requests; staff assignment/status workflow.
+- Campus Pulse schematic map and explainable building-health heuristic.
+- Alert register with role-aware create/update controls; seeded/sample sensor alerts are labelled simulated.
+- Visitor check-in/out register for security/admin.
+- Asset directory with generated QR codes.
+- Insights, responsive UI, Vite production build and Vercel deployment support.
+- Demo preview buttons to explore the UI before connecting Supabase. Demo data is in-memory only and is not authenticated or shared.
 
 ## Important limitations
-This is a software simulation. It does not connect to physical sensors, cameras, access-control hardware, emergency services, push notifications, or live location. SOS does not dispatch help or share location. Photo upload currently records the filename only; image bytes are not uploaded or securely stored. The role selector changes only the displayed demo role and is not authentication or authorization. Data is stored in the current browser only, not shared across devices. Use fictional records only.
+- No physical sensors, CCTV, access-control hardware, SMS/email notifications, live GPS, or emergency dispatch integration is included.
+- The map is a schematic illustration, not a live geographic map.
+- The building health score is a simple demonstration heuristic, not a certified safety rating.
+- QR codes identify assets within the site; QR scanning does not itself authenticate the user.
+- This prototype does not include a production file upload bucket. Do not enter real sensitive personal or visitor information until your institution has reviewed privacy, retention and access requirements.
+- Never expose a Supabase `service_role` key in frontend code. Only use the publishable/anon key in `VITE_SUPABASE_ANON_KEY` and rely on RLS policies.
 
-## Run locally
-1. Install Node.js (LTS).
-2. Extract the ZIP and open a terminal in this folder.
-3. Run `npm install`.
-4. Run `npm run dev`.
-5. Open the local URL printed by Vite.
+## Setup: real Supabase authentication and database
 
-## Production build
-- Run `npm run build`.
-- Vite outputs the production site into `dist/`.
-- For Vercel, Netlify, or Cloudflare Pages, use build command `npm run build` and output directory `dist`.
+### 1. Create a Supabase project
+1. Open https://supabase.com/ and create a project.
+2. Wait for the database to finish provisioning.
+3. In **Project Settings → API** (or **Connect**), copy the Project URL and the publishable/anon key. Do **not** use the `service_role` secret.
 
-## Suggested next integrations
-A real deployment would require a backend API, shared database, verified sensor gateway (for example MQTT), secure authentication and authorization, privacy/retention controls, secure image storage, and properly configured notification services. Add these only after testing and documenting the integration.
+### 2. Create database tables and security policies
+1. In Supabase, open **SQL Editor → New query**.
+2. Paste all of `supabase/schema.sql` and click **Run**.
+3. Confirm the `profiles`, `maintenance_requests`, `alerts`, `assets`, and `visitors` tables exist in **Table Editor**.
+4. The SQL enables Row Level Security (RLS). Do not disable RLS to work around a permission error.
+
+### 3. Configure local environment
+1. Copy `.env.example` to a new file named `.env.local` in the project root.
+2. Replace the placeholders:
+
+```env
+VITE_SUPABASE_URL=https://YOUR-PROJECT.supabase.co
+VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY
+```
+
+3. Install and run:
+
+```bash
+npm install
+npm run dev
+```
+
+Open the local URL printed by Vite. Register an account with email/password. If email confirmation is enabled, confirm the email before signing in.
+
+### 4. Assign roles safely
+Every self-registered user receives the `student` role. A user must never be able to choose their own administrator role from the public signup screen.
+
+To promote a trusted account, find that user's UUID in **Authentication → Users**, then run this query in SQL Editor, replacing the UUID and role with a verified account and one of `maintenance`, `security`, or `admin`:
+
+```sql
+update public.profiles
+set role = 'maintenance'
+where id = 'REPLACE-WITH-VERIFIED-AUTH-USER-UUID';
+```
+
+Repeat for the appropriate staff role. Only a trusted project owner should run role changes. Sign out and back in after changing a role so the UI reloads the profile. The database policies enforce important permissions; hiding a page in the UI is not the security boundary.
+
+### 5. Configure email auth
+In **Authentication → URL Configuration**, add your local URL (e.g. `http://localhost:5173`) and deployed Vercel URL to the allowed redirect URLs/site URL as needed by your project settings. Review your institution's password and email-confirmation policies before real use.
+
+## Deploy to Vercel
+1. Upload the contents of this project folder to your GitHub repository. `package.json` and `index.html` must be in the repository root.
+2. In Vercel, import that repository.
+3. Framework preset: **Vite**; Build command: `npm run build`; Output directory: `dist`; install command: `npm install`.
+4. In Vercel → Project → Settings → Environment Variables, add:
+   - `VITE_SUPABASE_URL` = your Supabase Project URL
+   - `VITE_SUPABASE_ANON_KEY` = your Supabase publishable/anon key
+5. Add them to Production (and Preview if desired), save, then redeploy.
+6. Add the deployed Vercel URL to Supabase's allowed redirect URLs.
+
+## Troubleshooting
+- **White screen / `React is not defined`:** this version imports React explicitly in `src/main.jsx` and uses `@vitejs/plugin-react`. Commit all files, then trigger a new Vercel deployment. Check browser Console for the first red error.
+- **`Invalid API key` or network error:** verify both Vercel environment variables and redeploy; don't include quotes or spaces around the values.
+- **Profile not found:** confirm `supabase/schema.sql` ran successfully and the profile trigger exists.
+- **Permission denied / RLS error:** confirm you used the correct role and ran the complete schema. Don't disable RLS as a shortcut.
+- **New account can't access staff pages:** expected. The default role is Student. Assign staff roles using the SQL procedure above.
+- **Vercel changes don't appear:** check that the newest deployment finished and hard-refresh the browser.
+
+## Build verification
+The source is configured for `npm run build`, but the authoring environment may not have network access to install dependencies. Run `npm install` and `npm run build` locally or inspect Vercel build logs before presenting it as verified.
