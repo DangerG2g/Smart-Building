@@ -6,7 +6,7 @@ Campus safety, maintenance and building operations prototype built with React + 
 - Supabase email/password authentication and profile lookup.
 - Four role-aware workspaces: Student, Maintenance, Security and Administrator.
 - Student maintenance requests; staff assignment/status workflow.
-- Campus Pulse schematic map and explainable building-health heuristic.
+- Building Pulse schematic map and explainable building-health heuristic.
 - Alert register with role-aware create/update controls; seeded/sample sensor alerts are labelled simulated.
 - Visitor check-in/out register for security/admin.
 - Asset directory with generated QR codes.
