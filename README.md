@@ -11,7 +11,7 @@ Campus safety, maintenance and building operations prototype built with React + 
 - Visitor check-in/out register for security/admin.
 - Asset directory with generated QR codes.
 - Insights, responsive UI, Vite production build and Vercel deployment support.
-- Demo preview buttons to explore the UI before connecting Supabase. Demo data is in-memory only and is not authenticated or shared.
+- Real-account-only sign-in/sign-up screen with password-reset email flow. No demo credentials or bypass login are presented.
 
 ## Important limitations
 - No physical sensors, CCTV, access-control hardware, SMS/email notifications, live GPS, or emergency dispatch integration is included.
@@ -65,8 +65,8 @@ where id = 'REPLACE-WITH-VERIFIED-AUTH-USER-UUID';
 
 Repeat for the appropriate staff role. Only a trusted project owner should run role changes. Sign out and back in after changing a role so the UI reloads the profile. The database policies enforce important permissions; hiding a page in the UI is not the security boundary.
 
-### 5. Configure email auth
-In **Authentication → URL Configuration**, add your local URL (e.g. `http://localhost:5173`) and deployed Vercel URL to the allowed redirect URLs/site URL as needed by your project settings. Review your institution's password and email-confirmation policies before real use.
+### 5. Password recovery and email auth
+The sign-in page includes **Forgot password?** and sends a reset link through Supabase. In **Authentication → URL Configuration**, add your local URL (e.g. `http://localhost:5173`) and deployed Vercel URL to the allowed redirect URLs/site URL as needed by your project settings. Review your institution's password and email-confirmation policies before real use.
 
 ## Deploy to Vercel
 1. Upload the contents of this project folder to your GitHub repository. `package.json` and `index.html` must be in the repository root.
@@ -88,3 +88,13 @@ In **Authentication → URL Configuration**, add your local URL (e.g. `http://lo
 
 ## Build verification
 The source is configured for `npm run build`, but the authoring environment may not have network access to install dependencies. Run `npm install` and `npm run build` locally or inspect Vercel build logs before presenting it as verified.
+
+## Shared alerts, complaints, and permissions
+
+- All signed-in users can read published alerts; user/student accounts have read-only access and cannot publish, edit, resolve, or delete official alerts.
+- Security and administrator roles can publish official alerts and update alert status. Alerts are labelled with their audience (default: `All users`).
+- Users submit complaints through the maintenance request form and can track their own requests. Maintenance/admin roles manage the work-order workflow; security can review reports under the database policies.
+- The Supabase schema includes an alert audit trail recording who published or updated an alert and the status change. Only security/admin roles can read the audit trail.
+- The login screen intentionally has no demo bypass. Real login and signup require the Supabase URL/key to be configured in the deployed Vercel project.
+
+After replacing the project files, run the updated `supabase/schema.sql` in the Supabase SQL Editor again. It is designed to be re-runnable and adds the alert audience/audit-trail objects to an existing project. Review any SQL error before proceeding.
