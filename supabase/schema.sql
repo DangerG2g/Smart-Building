@@ -46,10 +46,14 @@ create table if not exists public.alerts (
   severity text not null default 'Medium' check (severity in ('Low','Medium','High')),
   status text not null default 'Open' check (status in ('Open','Acknowledged','Resolved')),
   detail text not null default '',
+  audience text not null default 'All users' check (audience in ('All users','Staff only')),
   source text not null default 'SIMULATED',
   created_by uuid references public.profiles(id),
   created_at timestamptz not null default now()
 );
+
+-- Safe migration for projects that ran an earlier version of this schema.
+alter table public.alerts add column if not exists audience text not null default 'All users';
 
 create table if not exists public.assets (
   id text primary key default ('AST-' || upper(substr(encode(gen_random_bytes(4),'hex'),1,7))),
@@ -73,6 +77,37 @@ create table if not exists public.visitors (
   checked_out_at timestamptz
 );
 
+-- Audit trail for official alert changes. Never stores passwords or secret credentials.
+create table if not exists public.alert_audit_log (
+  id bigint generated always as identity primary key,
+  alert_id text not null,
+  action text not null,
+  changed_by uuid references auth.users(id) on delete set null,
+  changed_at timestamptz not null default now(),
+  old_status text,
+  new_status text,
+  alert_title text not null default ''
+);
+
+create or replace function public.log_alert_change()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if TG_OP = 'INSERT' then
+    insert into public.alert_audit_log(alert_id, action, changed_by, new_status, alert_title)
+    values (new.id, 'published', auth.uid(), new.status, new.title);
+    return new;
+  elsif TG_OP = 'UPDATE' then
+    insert into public.alert_audit_log(alert_id, action, changed_by, old_status, new_status, alert_title)
+    values (new.id, 'updated', auth.uid(), old.status, new.status, new.title);
+    return new;
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists alerts_audit_trigger on public.alerts;
+create trigger alerts_audit_trigger after insert or update on public.alerts
+for each row execute function public.log_alert_change();
+
 create or replace function public.current_role()
 returns text language sql stable security definer set search_path = '' as $$
   select role from public.profiles where id = auth.uid()
@@ -83,6 +118,7 @@ alter table public.maintenance_requests enable row level security;
 alter table public.alerts enable row level security;
 alter table public.assets enable row level security;
 alter table public.visitors enable row level security;
+alter table public.alert_audit_log enable row level security;
 
 drop policy if exists "Users read own profile" on public.profiles;
 create policy "Users read own profile" on public.profiles for select to authenticated using (id = auth.uid() or public.current_role() in ('admin','security','maintenance'));
@@ -105,6 +141,11 @@ drop policy if exists "Security and admins create alerts" on public.alerts;
 create policy "Security and admins create alerts" on public.alerts for insert to authenticated with check (public.current_role() in ('admin','security'));
 drop policy if exists "Security and admins update alerts" on public.alerts;
 create policy "Security and admins update alerts" on public.alerts for update to authenticated using (public.current_role() in ('admin','security')) with check (public.current_role() in ('admin','security'));
+
+drop policy if exists "Authorized staff read alert audit" on public.alert_audit_log;
+create policy "Authorized staff read alert audit" on public.alert_audit_log for select to authenticated using (public.current_role() in ('admin','security'));
+revoke all on public.alert_audit_log from anon, authenticated;
+grant select on public.alert_audit_log to authenticated;
 
 drop policy if exists "Authenticated users read assets" on public.assets;
 create policy "Authenticated users read assets" on public.assets for select to authenticated using (true);
