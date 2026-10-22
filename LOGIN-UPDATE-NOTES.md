@@ -6,7 +6,7 @@
 
 ## Behavior
 - Student/User: email + password; create-account and forgot-password options remain.
-- Staff: staff ID + password fields; no public staff signup.
+- Staff: staff email + password fields; no public staff signup.
 - Important: the Staff ID form is UI-only until secure staff-ID-to-Supabase-account authentication is implemented. It deliberately shows a clear message rather than pretending the login worked. Do not place a Supabase service-role key in frontend code.
 
 ## Student auth

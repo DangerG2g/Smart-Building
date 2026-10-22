@@ -1,22 +1,16 @@
-# SurakshaHub — three portals and staff-ID authentication setup
+# SurakshaHub: email/password login setup
 
-## Portals
-- Student/User: email + password; public signup.
-- Staff: staff ID + password, through `supabase/functions/staff-login`.
-- Administrator: email + password, only for a real provisioned administrator account. The UI does not create an administrator account.
+## Login behavior
+- Student/User: email + password; public signup and forgot-password are available.
+- Staff: email + password for a staff account created in Supabase Authentication. Institute/staff ID is intentionally postponed and can be added to the profile later.
+- Administrator: email + password for an administrator account created and provisioned by the project owner. Selecting the Administrator portal does not grant admin permissions.
 
-## Set up Staff ID login
-1. Run `supabase/staff-login-aliases.sql` in Supabase SQL Editor.
-2. Create each staff member as a real user in Supabase Authentication (use a valid email and a strong password).
-3. Assign the appropriate staff role in the project's profiles/role table using a trusted admin process.
-4. Add the staff alias and the Auth user UUID in `public.staff_login_aliases`, e.g. `staff@123` mapped to that staff user's UUID. Do not store passwords in this table.
-5. Deploy the Edge Function from the project root: `supabase functions deploy staff-login`.
-6. Set the Edge Function's server-side secrets `SUPABASE_URL`, `SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` using Supabase's function secrets tooling. The service role key must never go in Vite env variables or frontend files.
-
-## Administrator
-The Administrator portal is restored. It requires a real Supabase Auth user and an administrator role in the database. No administrator account is created automatically. Avoid short password `12345`; Supabase password policies may reject it and it is not safe for real use.
+## Supabase setup
+1. Ensure the project's schema has been run using `supabase/schema.sql`.
+2. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in your hosting provider and redeploy. Never put a service-role/secret key in frontend environment variables.
+3. Create staff and administrator accounts through Supabase Authentication → Users (or use the student signup flow for student accounts). Use real email addresses and strong passwords.
+4. Add trusted role assignment and database Row Level Security policies before giving staff/admin accounts access to restricted data. Portal selection is only a UI choice and is not authorization.
+5. Institute ID can be added later as an optional profile field and linked to the appropriate account.
 
 ## Important
-- The staff login function returns a normal Supabase Auth session after verifying the password through Supabase Auth. Add rate limiting/monitoring for a public-facing deployment.
-- Portal selection is not authorization. Database RLS policies must enforce permissions.
-- The app and Edge Function are prepared, but this ZIP has not been built or tested against your live Supabase project. Run `npm install` and `npm run build`, deploy the function, then test using provisioned accounts.
+This project uses Supabase email/password authentication for all three portals. It no longer depends on the `staff-login` Edge Function or `staff_login_aliases` mapping table. Existing deployments of that function may be removed later if no longer used.
