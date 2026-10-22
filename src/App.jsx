@@ -1,352 +1,219 @@
-import React from "react";
-import { useEffect, useMemo, useState } from "react";
-import {
-  Activity, AlertTriangle, Bell, Building2, Check, CheckCircle2, ChevronDown,
-  ClipboardList, Clock3, Filter, HardDrive, LayoutDashboard, MapPin, Menu,
-  Plus, RadioTower, ShieldAlert, ShieldCheck, Siren, Thermometer, Users,
-  Wrench, X, Zap, Camera, History, Search, LogOut, ArrowUpRight
-} from "lucide-react";
+import React, { useEffect, useMemo, useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { QRCodeSVG } from 'qrcode.react';
+import { Activity, AlertTriangle, Bell, Building2, CheckCircle2, ChevronRight, ClipboardList, Gauge, GraduationCap, HardHat, LayoutDashboard, LogOut, MapPinned, Menu, Plus, QrCode, RadioTower, Shield, ShieldAlert, ShieldCheck, Users, Wrench, X, RefreshCw, Search, Clock3, CircleHelp, Settings, Send, Check, ExternalLink } from 'lucide-react';
 
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabase = supabaseUrl && supabaseKey && !supabaseUrl.includes('YOUR-PROJECT') ? createClient(supabaseUrl, supabaseKey) : null;
 const BUILDINGS = [
-  { id: "B1", name: "Academic Block", type: "Teaching", area: "Classrooms & corridors" },
-  { id: "B2", name: "Central Library", type: "Library", area: "Reading rooms" },
-  { id: "B3", name: "Science Laboratory", type: "Laboratory", area: "Lab wing" },
-  { id: "B4", name: "Student Hostel", type: "Residential", area: "Common areas" },
-  { id: "B5", name: "Administration Block", type: "Office", area: "Reception" },
-  { id: "B6", name: "Auditorium & Events Hall", type: "Events", area: "Main hall" }
+  { id: 'B1', name: 'Academic Block', short: 'Academic', x: 22, y: 28, type: 'Teaching' },
+  { id: 'B2', name: 'Central Library', short: 'Library', x: 52, y: 18, type: 'Library' },
+  { id: 'B3', name: 'Science Laboratory', short: 'Laboratory', x: 76, y: 33, type: 'Laboratory' },
+  { id: 'B4', name: 'Student Hostel', short: 'Hostel', x: 27, y: 68, type: 'Residential' },
+  { id: 'B5', name: 'Administration Block', short: 'Admin', x: 53, y: 53, type: 'Office' },
+  { id: 'B6', name: 'Auditorium & Events Hall', short: 'Auditorium', x: 77, y: 73, type: 'Events' },
 ];
-
-const seed = {
-  readings: [
-    { id: "S-101", buildingId: "B1", area: "Second-floor corridor", type: "Temperature", value: 27, unit: "°C", threshold: 40, time: Date.now() - 1000 * 60 * 12, source: "SIMULATED" },
-    { id: "S-102", buildingId: "B2", area: "Reading room", type: "Temperature", value: 25, unit: "°C", threshold: 40, time: Date.now() - 1000 * 60 * 22, source: "SIMULATED" },
-    { id: "S-103", buildingId: "B3", area: "Lab wing", type: "Temperature", value: 43, unit: "°C", threshold: 40, time: Date.now() - 1000 * 60 * 4, source: "SIMULATED" },
-    { id: "S-104", buildingId: "B4", area: "Common area", type: "Temperature", value: 29, unit: "°C", threshold: 40, time: Date.now() - 1000 * 60 * 18, source: "SIMULATED" },
-    { id: "S-105", buildingId: "B5", area: "Reception", type: "Temperature", value: 26, unit: "°C", threshold: 40, time: Date.now() - 1000 * 60 * 30, source: "SIMULATED" },
-    { id: "S-106", buildingId: "B6", area: "Main hall", type: "Temperature", value: 28, unit: "°C", threshold: 40, time: Date.now() - 1000 * 60 * 8, source: "SIMULATED" }
-  ],
-  alerts: [
-    { id: "ALT-204", buildingId: "B3", area: "Lab wing", title: "Temperature threshold exceeded", detail: "Simulated reading: 43°C (demo threshold: 40°C)", severity: "High", status: "Open", time: Date.now() - 1000 * 60 * 4, source: "SIMULATION" },
-    { id: "ALT-203", buildingId: "B5", area: "Reception side door", title: "Restricted-zone event", detail: "Sample event generated for demonstration; no real access device connected.", severity: "Medium", status: "Acknowledged", time: Date.now() - 1000 * 60 * 25, source: "SIMULATION" }
-  ],
-  incidents: [
-    { id: "INC-302", buildingId: "B3", category: "Safety", title: "Review high temperature reading", description: "Check the simulated reading and record the follow-up action.", status: "Open", priority: "High", time: Date.now() - 1000 * 60 * 4 },
-    { id: "INC-301", buildingId: "B5", category: "Security", title: "Review restricted-zone event", description: "Demo event for the reception side door.", status: "In review", priority: "Medium", time: Date.now() - 1000 * 60 * 25 }
-  ],
-  maintenance: [
-    { id: "MNT-411", buildingId: "B2", title: "Reading-room light inspection", category: "Electrical", priority: "Medium", status: "Pending", description: "Inspect sample light fixture and record findings.", photoName: "", time: Date.now() - 1000 * 60 * 60 * 3 },
-    { id: "MNT-410", buildingId: "B6", title: "Pre-event equipment check", category: "Equipment", priority: "High", status: "In progress", description: "Sample request to check event equipment.", photoName: "", time: Date.now() - 1000 * 60 * 60 * 6 },
-    { id: "MNT-409", buildingId: "B1", title: "Corridor wall inspection", category: "Structural", priority: "Low", status: "Completed", description: "Sample visual inspection record.", photoName: "", time: Date.now() - 1000 * 60 * 60 * 24 }
-  ],
-  visitors: [
-    { id: "VIS-51", name: "Demo Visitor A", organization: "Sample Vendor", buildingId: "B5", purpose: "Meeting", checkIn: Date.now() - 1000 * 60 * 35, checkOut: null },
-    { id: "VIS-50", name: "Demo Visitor B", organization: "Guest", buildingId: "B2", purpose: "Library visit", checkIn: Date.now() - 1000 * 60 * 120, checkOut: Date.now() - 1000 * 60 * 70 }
-  ],
-  accessLogs: [
-    { id: "ACC-12", buildingId: "B5", zone: "Reception side door", event: "Restricted-zone simulation", time: Date.now() - 1000 * 60 * 25 },
-    { id: "ACC-11", buildingId: "B4", zone: "Hostel reception", event: "Visitor check-in recorded", time: Date.now() - 1000 * 60 * 45 }
-  ],
-  activity: [
-    { id: "ACT-1", text: "Demo data loaded for six buildings", time: Date.now() - 1000 * 60 * 30 },
-    { id: "ACT-2", text: "Restricted-zone simulation added", time: Date.now() - 1000 * 60 * 25 },
-    { id: "ACT-3", text: "Temperature alert generated for Science Laboratory", time: Date.now() - 1000 * 60 * 4 }
-  ]
+const ROLES = {
+  student: { label: 'Student', icon: GraduationCap, intro: 'Report issues and follow their progress.' },
+  maintenance: { label: 'Maintenance staff', icon: Wrench, intro: 'Manage assigned work and close repair jobs.' },
+  security: { label: 'Security staff', icon: ShieldCheck, intro: 'Monitor campus alerts and safety incidents.' },
+  admin: { label: 'Administrator', icon: Settings, intro: 'Oversee buildings, people and campus operations.' },
 };
-
-const STORAGE_KEY = "campusshield-demo-v1";
-const id = (prefix) => `${prefix}-${Math.floor(Date.now() % 1000000).toString().padStart(6, "0")}`;
-const fmt = (time) => new Date(time).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-const buildingName = (buildingId) => BUILDINGS.find((b) => b.id === buildingId)?.name || "Unknown building";
-
-function loadData() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    return saved ? { ...seed, ...JSON.parse(saved) } : seed;
-  } catch { return seed; }
-}
-
-function StatCard({ icon: Icon, label, value, note, tone = "blue" }) {
-  return <div className="stat-card">
-    <div className={`stat-icon ${tone}`}><Icon size={20} /></div>
-    <div className="stat-copy"><span>{label}</span><strong>{value}</strong><small>{note}</small></div>
-  </div>;
-}
-
-function StatusPill({ children }) {
-  const value = String(children || "").toLowerCase().replaceAll(" ", "-");
-  return <span className={`status-pill ${value}`}>{children}</span>;
-}
-
-function SectionHeading({ eyebrow, title, subtitle, action }) {
-  return <div className="section-heading"><div><p className="eyebrow">{eyebrow}</p><h2>{title}</h2>{subtitle && <p className="muted">{subtitle}</p>}</div>{action}</div>;
-}
+const DEMO_USERS = {
+  student: { id: 'demo-student', email: 'student@demo.campus', role: 'student', full_name: 'Demo Student' },
+  maintenance: { id: 'demo-maintenance', email: 'maintenance@demo.campus', role: 'maintenance', full_name: 'Demo Maintenance' },
+  security: { id: 'demo-security', email: 'security@demo.campus', role: 'security', full_name: 'Demo Security' },
+  admin: { id: 'demo-admin', email: 'admin@demo.campus', role: 'admin', full_name: 'Demo Administrator' },
+};
+const seedRequests = [
+  { id: 'MNT-410', title: 'Pre-event equipment check', building_id: 'B6', area: 'Main hall', category: 'Equipment', priority: 'High', status: 'In progress', description: 'Check microphones and stage lighting before the event.', reporter_name: 'Events Office', assigned_to: 'Maintenance Team', created_at: new Date(Date.now()-1000*60*60*5).toISOString() },
+  { id: 'MNT-411', title: 'Reading-room light inspection', building_id: 'B2', area: 'Reading room', category: 'Electrical', priority: 'Medium', status: 'Pending', description: 'Inspect a flickering light fixture.', reporter_name: 'Demo Student', assigned_to: '', created_at: new Date(Date.now()-1000*60*60*3).toISOString() },
+  { id: 'MNT-412', title: 'Washroom tap leak', building_id: 'B4', area: 'Ground floor washroom', category: 'Plumbing', priority: 'Low', status: 'Resolved', description: 'Sample completed repair request.', reporter_name: 'Demo Student', assigned_to: 'Maintenance Team', created_at: new Date(Date.now()-1000*60*60*28).toISOString() },
+];
+const seedAlerts = [
+  { id: 'ALT-204', title: 'Temperature threshold exceeded', building_id: 'B3', area: 'Lab wing', severity: 'High', status: 'Open', detail: 'Simulated reading: 43°C (demo threshold: 40°C)', created_at: new Date(Date.now()-1000*60*4).toISOString(), source: 'SIMULATED' },
+  { id: 'ALT-203', title: 'Restricted-zone event', building_id: 'B5', area: 'Reception side door', severity: 'Medium', status: 'Acknowledged', detail: 'Demonstration event; no access device connected.', created_at: new Date(Date.now()-1000*60*25).toISOString(), source: 'SIMULATED' },
+];
+const fmt = (v) => v ? new Date(v).toLocaleString([], { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' }) : 'Just now';
+const bName = (id) => BUILDINGS.find(b => b.id === id)?.name || id || 'Unassigned';
+const uid = (prefix) => `${prefix}-${Math.random().toString(36).slice(2,7).toUpperCase()}`;
 
 export default function App() {
-  const [data, setData] = useState(loadData);
-  const [page, setPage] = useState("Overview");
-  const [selectedBuilding, setSelectedBuilding] = useState("All buildings");
-  const [search, setSearch] = useState("");
-  const [role, setRole] = useState("Campus administrator");
-  const [toast, setToast] = useState("");
-  const [modal, setModal] = useState("");
-  const [sensorBuilding, setSensorBuilding] = useState("B3");
-  const [sensorArea, setSensorArea] = useState("Lab wing");
-  const [sensorValue, setSensorValue] = useState(43);
-  const [sensorThreshold, setSensorThreshold] = useState(40);
-  const [sensorType, setSensorType] = useState("Temperature");
-  const [sosBuilding, setSosBuilding] = useState("B1");
-  const [sosArea, setSosArea] = useState("");
-  const [sosDescription, setSosDescription] = useState("");
-  const [maintenanceForm, setMaintenanceForm] = useState({ buildingId: "B2", title: "", category: "Electrical", priority: "Medium", description: "" });
-  const [visitorForm, setVisitorForm] = useState({ name: "", organization: "", buildingId: "B5", purpose: "Meeting" });
-  const [incidentFilter, setIncidentFilter] = useState("All");
-  const [maintenanceFilter, setMaintenanceFilter] = useState("All");
+  const [session, setSession] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [page, setPage] = useState('Overview');
+  const [loading, setLoading] = useState(Boolean(supabase));
+  const [error, setError] = useState('');
+  const [demoUser, setDemoUser] = useState(null);
+  const [requests, setRequests] = useState(seedRequests);
+  const [alerts, setAlerts] = useState(seedAlerts);
+  const [assets, setAssets] = useState([
+    { id:'AST-001', name:'Science Lab ventilation unit', building_id:'B3', area:'Lab wing', category:'HVAC', status:'Operational' },
+    { id:'AST-002', name:'Library emergency light', building_id:'B2', area:'North exit', category:'Safety', status:'Needs inspection' },
+    { id:'AST-003', name:'Auditorium sound system', building_id:'B6', area:'Main hall', category:'AV equipment', status:'Operational' },
+    { id:'AST-004', name:'Hostel water pump', building_id:'B4', area:'Utility room', category:'Plumbing', status:'Operational' },
+  ]);
+  const [visitors, setVisitors] = useState([{ id:'VIS-51', name:'Demo Visitor', organization:'Sample Vendor', building_id:'B5', purpose:'Meeting', checked_out:false, created_at:new Date().toISOString() }]);
+  const [search, setSearch] = useState('');
+  const [showRequest, setShowRequest] = useState(false);
+  const [toast, setToast] = useState('');
+  const user = demoUser || (session?.user ? { ...session.user, ...profile, email: session.user.email } : null);
+  const role = user?.role || 'student';
+  const isDemo = Boolean(demoUser);
 
   useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
-  }, [data]);
+    if (!supabase) { setLoading(false); return; }
+    supabase.auth.getSession().then(async ({ data, error: e }) => {
+      if (e) setError(e.message);
+      setSession(data.session);
+      if (data.session?.user) await fetchProfile(data.session.user.id);
+      setLoading(false);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
+      setSession(nextSession);
+      if (nextSession?.user) await fetchProfile(nextSession.user.id); else setProfile(null);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
-  useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(""), 3000);
-    return () => clearTimeout(timer);
-  }, [toast]);
+  async function fetchProfile(userId) {
+    if (!supabase) return;
+    const { data, error: e } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    if (e) setError(`Signed in, but profile could not be loaded: ${e.message}. Check the SQL setup and profiles table.`);
+    else setProfile(data);
+  }
+  async function refreshData() {
+    if (!supabase || isDemo) return;
+    const [{ data: reqs, error: reqErr }, { data: alts, error: altErr }, { data: asts, error: astErr }, { data: vis, error: visErr }] = await Promise.all([
+      supabase.from('maintenance_requests').select('*').order('created_at', { ascending:false }),
+      supabase.from('alerts').select('*').order('created_at', { ascending:false }),
+      supabase.from('assets').select('*').order('name'),
+      supabase.from('visitors').select('*').order('created_at', { ascending:false }),
+    ]);
+    const firstErr = reqErr || altErr || astErr || visErr;
+    if (firstErr) setError(`Database read failed: ${firstErr.message}. Check that you ran supabase/schema.sql.`);
+    if (reqs) setRequests(reqs); if (alts) setAlerts(alts); if (asts) setAssets(asts); if (vis) setVisitors(vis);
+  }
+  useEffect(() => { if (user && !isDemo) refreshData(); }, [user?.id, isDemo]);
+  useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(''), 3200); return () => clearTimeout(t); }, [toast]);
 
-  const openAlerts = data.alerts.filter((a) => a.status === "Open").length;
-  const openIncidents = data.incidents.filter((i) => i.status !== "Closed").length;
-  const pendingMaintenance = data.maintenance.filter((m) => m.status !== "Completed").length;
-  const checkedInVisitors = data.visitors.filter((v) => !v.checkOut).length;
-  const activeFilter = selectedBuilding === "All buildings" ? null : BUILDINGS.find((b) => b.name === selectedBuilding)?.id;
-  const matchesBuilding = (item) => !activeFilter || item.buildingId === activeFilter;
-  const visibleBuildings = BUILDINGS.filter((b) => b.name.toLowerCase().includes(search.toLowerCase()) && (!activeFilter || b.id === activeFilter));
-  const recentActivity = [...data.activity].sort((a,b)=>b.time-a.time).slice(0,6);
+  async function signIn(e) {
+    e.preventDefault(); setError(''); const fd = new FormData(e.currentTarget);
+    const email = String(fd.get('email') || '').trim(); const password = String(fd.get('password') || '');
+    if (!supabase) { setError('Supabase is not configured yet. Follow SETUP.md, or use Demo preview below.'); return; }
+    setLoading(true); const { error: e2 } = await supabase.auth.signInWithPassword({ email, password });
+    if (e2) setError(e2.message); setLoading(false);
+  }
+  async function signUp(e) {
+    e.preventDefault(); setError(''); const fd = new FormData(e.currentTarget);
+    const full_name = String(fd.get('name') || '').trim(); const email = String(fd.get('email') || '').trim(); const password = String(fd.get('password') || '');
+    if (!supabase) { setError('Add your Supabase URL and key to .env.local first.'); return; }
+    if (password.length < 8) { setError('Use a password with at least 8 characters.'); return; }
+    setLoading(true);
+    const { data, error: e2 } = await supabase.auth.signUp({ email, password, options: { data: { full_name } } });
+    if (e2) setError(e2.message); else if (data.session) setToast('Account created. Your default role is Student.'); else setToast('Check your email to confirm your account, then sign in.');
+    setLoading(false);
+  }
+  async function signOut() { if (isDemo) setDemoUser(null); else if (supabase) await supabase.auth.signOut(); setPage('Overview'); setError(''); }
 
-  const addActivity = (text) => setData((d) => ({ ...d, activity: [{ id: id("ACT"), text, time: Date.now() }, ...d.activity].slice(0, 80) }));
-  const updateData = (key, updater) => setData((d) => ({ ...d, [key]: updater(d[key]) }));
+  async function createRequest(form) {
+    const item = { id: uid('MNT'), title: form.title, building_id: form.building_id, area: form.area, category: form.category, priority: form.priority, status:'Pending', description:form.description, reporter_name:user?.full_name || user?.email || 'Campus user', assigned_to:'', created_at:new Date().toISOString(), reporter_id:user?.id };
+    if (supabase && !isDemo) {
+      const { data, error: e } = await supabase.from('maintenance_requests').insert({ title:item.title, building_id:item.building_id, area:item.area, category:item.category, priority:item.priority, status:item.status, description:item.description, reporter_id:user.id, reporter_name:item.reporter_name }).select().single();
+      if (e) { setError(`Could not submit request: ${e.message}`); return; } setRequests(old => [data, ...old]);
+    } else setRequests(old => [item, ...old]);
+    setShowRequest(false); setToast('Maintenance request submitted.'); setPage('My requests');
+  }
+  async function updateRequest(item, updates) {
+    if (supabase && !isDemo) { const { data, error:e } = await supabase.from('maintenance_requests').update(updates).eq('id', item.id).select().single(); if(e){setError(`Update failed: ${e.message}`);return;} setRequests(old=>old.map(x=>x.id===item.id?data:x)); }
+    else setRequests(old=>old.map(x=>x.id===item.id?{...x,...updates}:x));
+    setToast('Work order updated.');
+  }
+  async function createAlert(title, building_id, area, severity='Medium', detail='Generated from CampusShield demo controls.') {
+    const item = { id:uid('ALT'), title, building_id, area, severity, status:'Open', detail, source:'SIMULATED', created_at:new Date().toISOString() };
+    if (supabase && !isDemo) { const {data,error:e}=await supabase.from('alerts').insert({title,building_id,area,severity,status:'Open',detail,source:'SIMULATED',created_by:user.id}).select().single(); if(e){setError(`Alert could not be saved: ${e.message}`);return;} setAlerts(old=>[data,...old]); }
+    else setAlerts(old=>[item,...old]);
+    setToast('Alert created. Clearly marked as simulated.');
+  }
+  async function updateAlert(item, updates) {
+    if(supabase && !isDemo){const {data,error:e}=await supabase.from('alerts').update(updates).eq('id',item.id).select().single();if(e){setError(e.message);return;}setAlerts(old=>old.map(x=>x.id===item.id?data:x));}
+    else setAlerts(old=>old.map(x=>x.id===item.id?{...x,...updates}:x)); setToast('Alert updated.');
+  }
+  async function addVisitor(form) {
+    const item={id:uid('VIS'),...form,checked_out:false,created_at:new Date().toISOString()};
+    if(supabase&&!isDemo){const {data,error:e}=await supabase.from('visitors').insert({name:item.name,organization:item.organization,building_id:item.building_id,purpose:item.purpose,checked_out:false,created_by:user.id}).select().single();if(e){setError(e.message);return;}setVisitors(old=>[data,...old]);}
+    else setVisitors(old=>[item,...old]);setToast('Visitor checked in.');
+  }
+  async function checkoutVisitor(item) {
+    if(supabase&&!isDemo){const {data,error:e}=await supabase.from('visitors').update({checked_out:true,checked_out_at:new Date().toISOString()}).eq('id',item.id).select().single();if(e){setError(e.message);return;}setVisitors(old=>old.map(x=>x.id===item.id?data:x));}
+    else setVisitors(old=>old.map(x=>x.id===item.id?{...x,checked_out:true}:x));setToast('Visitor checked out.');
+  }
 
-  const generateSensorEvent = () => {
-    const reading = { id: id("S"), buildingId: sensorBuilding, area: sensorArea || "Unspecified area", type: sensorType, value: Number(sensorValue), unit: sensorType === "Temperature" ? "°C" : sensorType === "Humidity" ? "%" : "units", threshold: Number(sensorThreshold), time: Date.now(), source: "SIMULATED" };
-    const isAlert = Number(sensorValue) > Number(sensorThreshold);
-    const alert = isAlert ? { id: id("ALT"), buildingId: sensorBuilding, area: reading.area, title: `${sensorType} threshold exceeded`, detail: `Simulated reading: ${reading.value}${reading.unit} (demo threshold: ${reading.threshold}${reading.unit})`, severity: Number(sensorValue) > Number(sensorThreshold) + 10 ? "High" : "Medium", status: "Open", time: Date.now(), source: "SIMULATION" } : null;
-    setData((d) => ({
-      ...d,
-      readings: [reading, ...d.readings].slice(0, 100),
-      alerts: alert ? [alert, ...d.alerts] : d.alerts,
-      activity: [{ id: id("ACT"), text: `${sensorType} demo reading added for ${buildingName(sensorBuilding)}${isAlert ? " — alert generated" : ""}`, time: Date.now() }, ...d.activity].slice(0, 80)
-    }));
-    setToast(isAlert ? "Demo reading saved and alert generated." : "Demo reading saved; threshold not exceeded.");
+  const myRequests = useMemo(() => requests.filter(r => role !== 'student' || isDemo || r.reporter_id === user?.id || r.reporter_name === user?.full_name), [requests, role, isDemo, user?.id, user?.full_name]);
+  const openCount = requests.filter(r => !['Resolved','Completed'].includes(r.status)).length;
+  const highAlerts = alerts.filter(a => a.status !== 'Resolved' && a.severity === 'High').length;
+  const buildingHealth = (b) => {
+    const open = requests.filter(r => r.building_id===b.id && !['Resolved','Completed'].includes(r.status)).length;
+    const critical = alerts.filter(a=>a.building_id===b.id && a.status!=='Resolved' && a.severity==='High').length;
+    return Math.max(28, Math.min(100, 100 - open*13 - critical*22));
   };
+  const filteredRequests = myRequests.filter(r => `${r.title} ${r.area} ${bName(r.building_id)} ${r.status} ${r.category}`.toLowerCase().includes(search.toLowerCase()));
+  const navItems = role==='student' ? ['Overview','My requests','Campus Pulse','Assets & QR'] : role==='maintenance' ? ['Overview','Work orders','Campus Pulse','Assets & QR'] : role==='security' ? ['Overview','Alerts & incidents','Visitors','Campus Pulse'] : ['Overview','Work orders','Alerts & incidents','Visitors','Campus Pulse','Assets & QR','Insights'];
 
-  const generateRestrictedEvent = () => {
-    const event = { id: id("ALT"), buildingId: sensorBuilding, area: sensorArea || "Restricted zone", title: "Restricted-zone activity", detail: "Simulated access event. No real camera or access-control device is connected.", severity: "Medium", status: "Open", time: Date.now(), source: "SIMULATION" };
-    const log = { id: id("ACC"), buildingId: sensorBuilding, zone: sensorArea || "Restricted zone", event: "Restricted-zone simulation", time: Date.now() };
-    setData((d) => ({ ...d, alerts: [event, ...d.alerts], accessLogs: [log, ...d.accessLogs], activity: [{ id: id("ACT"), text: `Restricted-zone simulation generated for ${buildingName(sensorBuilding)}`, time: Date.now() }, ...d.activity].slice(0,80) }));
-    setToast("Restricted-zone demo event recorded.");
-  };
-
-  const acknowledgeAlert = (alertId) => {
-    setData((d) => ({ ...d, alerts: d.alerts.map((a) => a.id === alertId ? { ...a, status: "Acknowledged" } : a), activity: [{ id: id("ACT"), text: `Alert ${alertId} acknowledged`, time: Date.now() }, ...d.activity] }));
-    setToast("Alert acknowledged.");
-  };
-
-  const makeIncidentFromAlert = (alert) => {
-    if (data.incidents.some((i) => i.sourceAlertId === alert.id)) return setToast("An incident is already linked to this alert.");
-    const incident = { id: id("INC"), buildingId: alert.buildingId, category: alert.title.includes("Restricted") ? "Security" : "Safety", title: alert.title, description: alert.detail, status: "Open", priority: alert.severity, time: Date.now(), sourceAlertId: alert.id };
-    setData((d) => ({ ...d, incidents: [incident, ...d.incidents], activity: [{ id: id("ACT"), text: `Incident ${incident.id} created from alert ${alert.id}`, time: Date.now() }, ...d.activity] }));
-    setToast("Incident created from alert.");
-  };
-
-  const submitSos = (e) => {
-    e.preventDefault();
-    if (!sosDescription.trim()) return setToast("Please describe the demo incident.");
-    const incident = { id: id("SOS"), buildingId: sosBuilding, category: "SOS", title: "SOS emergency report (demo)", description: `${sosArea ? `Area: ${sosArea}. ` : ""}${sosDescription}`, status: "Open", priority: "High", time: Date.now(), locationShared: false };
-    setData((d) => ({ ...d, incidents: [incident, ...d.incidents], activity: [{ id: id("ACT"), text: `Demo SOS report created for ${buildingName(sosBuilding)}`, time: Date.now() }, ...d.activity] }));
-    setSosArea(""); setSosDescription(""); setModal(""); setPage("Incidents"); setToast("Demo SOS incident recorded. No emergency services were contacted.");
-  };
-
-  const submitMaintenance = (e) => {
-    e.preventDefault();
-    if (!maintenanceForm.title.trim()) return setToast("Add a maintenance issue title.");
-    const request = { ...maintenanceForm, id: id("MNT"), status: "Pending", time: Date.now(), photoName: maintenanceForm.photoName || "" };
-    setData((d) => ({ ...d, maintenance: [request, ...d.maintenance], activity: [{ id: id("ACT"), text: `Maintenance request ${request.id} created for ${buildingName(request.buildingId)}`, time: Date.now() }, ...d.activity] }));
-    setMaintenanceForm({ buildingId: "B2", title: "", category: "Electrical", priority: "Medium", description: "" });
-    setModal(""); setPage("Maintenance"); setToast("Maintenance request created.");
-  };
-
-  const submitVisitor = (e) => {
-    e.preventDefault();
-    if (!visitorForm.name.trim()) return setToast("Enter a demo visitor name.");
-    const visitor = { ...visitorForm, id: id("VIS"), checkIn: Date.now(), checkOut: null };
-    const log = { id: id("ACC"), buildingId: visitor.buildingId, zone: "Reception", event: `Visitor check-in: ${visitor.name}`, time: Date.now() };
-    setData((d) => ({ ...d, visitors: [visitor, ...d.visitors], accessLogs: [log, ...d.accessLogs], activity: [{ id: id("ACT"), text: `Visitor checked in at ${buildingName(visitor.buildingId)}`, time: Date.now() }, ...d.activity] }));
-    setVisitorForm({ name: "", organization: "", buildingId: "B5", purpose: "Meeting" });
-    setModal(""); setPage("Visitors"); setToast("Demo visitor checked in.");
-  };
-
-  const updateStatus = (key, recordId, status) => {
-    setData((d) => ({ ...d, [key]: d[key].map((x) => x.id === recordId ? { ...x, status } : x), activity: [{ id: id("ACT"), text: `${key === "maintenance" ? "Maintenance" : "Incident"} ${recordId} updated to ${status}`, time: Date.now() }, ...d.activity] }));
-    setToast("Status updated.");
-  };
-
-  const checkOutVisitor = (visitor) => {
-    setData((d) => ({ ...d, visitors: d.visitors.map((v) => v.id === visitor.id ? { ...v, checkOut: Date.now() } : v), accessLogs: [{ id: id("ACC"), buildingId: visitor.buildingId, zone: "Reception", event: `Visitor check-out: ${visitor.name}`, time: Date.now() }, ...d.accessLogs], activity: [{ id: id("ACT"), text: `Visitor checked out of ${buildingName(visitor.buildingId)}`, time: Date.now() }, ...d.activity] }));
-    setToast("Visitor checked out.");
-  };
-
-  const buildingsWithStatus = useMemo(() => BUILDINGS.map((b) => {
-    const alerts = data.alerts.filter((a) => a.buildingId === b.id && a.status === "Open").length;
-    const incidents = data.incidents.filter((i) => i.buildingId === b.id && i.status !== "Closed").length;
-    const requests = data.maintenance.filter((m) => m.buildingId === b.id && m.status !== "Completed").length;
-    const latest = data.readings.find((r) => r.buildingId === b.id);
-    return { ...b, alerts, incidents, requests, latest, status: alerts ? "Attention" : incidents || requests ? "Monitor" : "Normal" };
-  }), [data]);
-
-  const filteredAlerts = data.alerts.filter(matchesBuilding).filter((a) => `${a.title} ${a.area} ${buildingName(a.buildingId)}`.toLowerCase().includes(search.toLowerCase()));
-  const filteredIncidents = data.incidents.filter(matchesBuilding).filter((i) => incidentFilter === "All" || i.status === incidentFilter).filter((i) => `${i.title} ${i.description} ${buildingName(i.buildingId)}`.toLowerCase().includes(search.toLowerCase()));
-  const filteredMaintenance = data.maintenance.filter(matchesBuilding).filter((m) => maintenanceFilter === "All" || m.status === maintenanceFilter).filter((m) => `${m.title} ${m.description} ${buildingName(m.buildingId)}`.toLowerCase().includes(search.toLowerCase()));
-  const filteredVisitors = data.visitors.filter(matchesBuilding).filter((v) => `${v.name} ${v.organization} ${buildingName(v.buildingId)}`.toLowerCase().includes(search.toLowerCase()));
-  const filteredLogs = data.accessLogs.filter(matchesBuilding).filter((v) => `${v.event} ${v.zone} ${buildingName(v.buildingId)}`.toLowerCase().includes(search.toLowerCase()));
-
-  const navItems = [
-    { name: "Overview", icon: LayoutDashboard },
-    { name: "Safety & Alerts", icon: ShieldAlert },
-    { name: "Incidents", icon: ClipboardList },
-    { name: "Maintenance", icon: Wrench },
-    { name: "Visitors & Access", icon: Users },
-    { name: "Sensor Simulator", icon: RadioTower },
-    { name: "History & Insights", icon: History }
-  ];
-
-  const navTo = (name) => { setPage(name); setSearch(""); };
-  const buildingOptions = [{ value: "All buildings", label: "All buildings" }, ...BUILDINGS.map((b) => ({ value: b.name, label: b.name }))];
-  const buildingIdOptions = BUILDINGS.map((b) => ({ value: b.id, label: b.name }));
+  if (loading) return <div className="loading-screen"><div className="brand-mark"><ShieldCheck/></div><h2>CampusShield</h2><p>Connecting securely…</p></div>;
+  if (!user) return <AuthScreen onSignIn={signIn} onSignUp={signUp} onDemo={setDemoUser} error={error} setError={setError} configured={Boolean(supabase)} loading={loading} />;
 
   return <div className="app-shell">
     <aside className="sidebar">
-      <div className="brand"><div className="brand-mark"><ShieldCheck size={23} /></div><div><strong>CampusShield</strong><small>SMART CAMPUS SYSTEM</small></div></div>
-      <div className="campus-chip"><span className="pulse-dot" /> Demo campus <span className="demo-label">SIMULATED</span></div>
-      <p className="nav-label">WORKSPACE</p>
-      <nav>{navItems.map(({ name, icon: Icon }) => <button key={name} className={`nav-item ${page === name ? "active" : ""}`} onClick={() => navTo(name)}><Icon size={18} /><span>{name}</span>{name === "Safety & Alerts" && openAlerts > 0 && <b>{openAlerts}</b>}</button>)}</nav>
-      <div className="sidebar-bottom">
-        <div className="privacy-note"><ShieldCheck size={16} /><div><strong>Privacy-first demo</strong><p>No real sensors, cameras, or emergency dispatch connected.</p></div></div>
-        <div className="profile-row"><div className="avatar">CS</div><div><strong>Demo operator</strong><small>Local browser session</small></div><ChevronDown size={16} /></div>
-      </div>
+      <div className="brand"><div className="brand-mark"><ShieldCheck size={23}/></div><div><b>CampusShield</b><small>SMART CAMPUS OPS</small></div></div>
+      <div className="campus-label">WORKSPACE</div>
+      <nav>{navItems.map((n)=>{const Icon=navIcon(n);return <button key={n} className={`nav-link ${page===n?'active':''}`} onClick={()=>setPage(n)}><Icon size={18}/><span>{n}</span>{n==='Alerts & incidents'&&highAlerts>0&&<i>{highAlerts}</i>}</button>})}</nav>
+      <div className="sidebar-bottom"><div className="system-status"><span className="online-dot"/><div><b>{isDemo?'Demo preview':supabase?'Supabase connected':'Local preview'}</b><small>{isDemo?'Sample data only':supabase?'Database-backed session':'Configure .env.local'}</small></div></div><button className="profile-row" onClick={signOut}><div className="avatar">{(user.full_name||user.email||'U').slice(0,1).toUpperCase()}</div><div className="profile-text"><b>{user.full_name||user.email}</b><small>{ROLES[role]?.label||role}</small></div><LogOut size={16}/></button></div>
     </aside>
-
     <main className="main-area">
-      <header className="topbar">
-        <div className="breadcrumb"><span>CampusShield</span><span className="slash">/</span><strong>{page}</strong></div>
-        <div className="top-actions">
-          <label className="role-select"><span>View as</span><select value={role} onChange={(e) => setRole(e.target.value)}><option>Campus administrator</option><option>Security staff (demo view)</option><option>Maintenance staff (demo view)</option></select></label>
-          <span className="demo-pill"><span className="pulse-dot" /> DEMO MODE</span>
-        </div>
-      </header>
-
-      <div className="content">
-        <div className="welcome-row">
-          <div><p className="eyebrow">FICTIONAL UNIVERSITY CAMPUS</p><h1>{page === "Overview" ? "Campus overview" : page}</h1><p className="muted">Six-building safety, security and facility monitoring prototype.</p></div>
-          <div className="welcome-actions"><button className="button secondary" onClick={() => setModal("sos")}><Siren size={16} /> Report SOS</button><button className="button primary" onClick={() => setModal("maintenance")}><Plus size={16} /> New request</button></div>
-        </div>
-
-        <div className="filter-bar">
-          <div className="search-box"><Search size={17} /><input aria-label="Search records" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search buildings, alerts, records..." /></div>
-          <div className="filter-select"><Filter size={16} /><select value={selectedBuilding} onChange={(e) => setSelectedBuilding(e.target.value)}>{buildingOptions.map((o) => <option key={o.value}>{o.value}</option>)}</select></div>
-        </div>
-
-        {page === "Overview" && <div className="page-stack">
-          <div className="stat-grid">
-            <StatCard icon={Building2} label="Buildings monitored" value="6" note="Demo campus blocks" tone="blue" />
-            <StatCard icon={Bell} label="Open alerts" value={openAlerts} note="Require review" tone="orange" />
-            <StatCard icon={ClipboardList} label="Open incidents" value={openIncidents} note="Not yet closed" tone="purple" />
-            <StatCard icon={Wrench} label="Pending maintenance" value={pendingMaintenance} note="Awaiting completion" tone="green" />
-          </div>
-          <div className="two-column">
-            <section className="panel">
-              <SectionHeading eyebrow="CAMPUS STATUS" title="Building overview" subtitle="Status is calculated from open demo alerts, incidents and requests." action={<span className="mini-badge"><Activity size={13} /> 6 locations</span>} />
-              <div className="building-grid">{buildingsWithStatus.filter(matchesBuilding).filter((b)=>b.name.toLowerCase().includes(search.toLowerCase())).map((b) => <div className="building-card" key={b.id}>
-                <div className="building-card-top"><div className="building-icon"><Building2 size={20} /></div><StatusPill>{b.status}</StatusPill></div>
-                <h3>{b.name}</h3><p>{b.type} · {b.area}</p>
-                <div className="building-metrics"><span><Bell size={13} /> {b.alerts} alerts</span><span><Wrench size={13} /> {b.requests} tasks</span></div>
-                <div className="building-bottom"><span>{b.latest ? `${b.latest.type}: ${b.latest.value}${b.latest.unit}` : "No reading"}</span><button className="text-button" onClick={() => {setSelectedBuilding(b.name);setPage("Safety & Alerts");}}>View <ArrowUpRight size={14} /></button></div>
-              </div>)}</div>
-            </section>
-            <section className="panel">
-              <SectionHeading eyebrow="NEEDS ATTENTION" title="Recent alerts" subtitle="Sample events generated by the simulator." action={<button className="text-button" onClick={()=>setPage("Safety & Alerts")}>View all <ArrowUpRight size={14}/></button>} />
-              <div className="record-list">{data.alerts.filter(matchesBuilding).slice(0,5).map((a)=><div className="record-row" key={a.id}><div className={`record-icon ${a.severity.toLowerCase()}`}><AlertTriangle size={17}/></div><div className="record-main"><strong>{a.title}</strong><p>{buildingName(a.buildingId)} · {a.area}</p><small>{fmt(a.time)}</small></div><StatusPill>{a.status}</StatusPill></div>)}</div>
-            </section>
-          </div>
-          <div className="two-column">
-            <section className="panel"><SectionHeading eyebrow="FOLLOW-UP" title="Maintenance queue" subtitle="Open requests across the campus." action={<button className="text-button" onClick={()=>setPage("Maintenance")}>Open queue <ArrowUpRight size={14}/></button>} />
-              <div className="compact-table"><div className="table-head"><span>REQUEST</span><span>BUILDING</span><span>STATUS</span></div>{data.maintenance.filter((m)=>m.status!=="Completed" && matchesBuilding(m)).slice(0,4).map((m)=><div className="table-row" key={m.id}><div><strong>{m.title}</strong><small>{m.id} · {m.priority} priority</small></div><span>{buildingName(m.buildingId)}</span><StatusPill>{m.status}</StatusPill></div>)}</div>
-            </section>
-            <section className="panel"><SectionHeading eyebrow="ACTIVITY" title="Recent activity" subtitle="Latest changes in this browser demo." /><div className="timeline">{recentActivity.map((a)=><div className="timeline-item" key={a.id}><span className="timeline-dot"/><div><p>{a.text}</p><small>{fmt(a.time)}</small></div></div>)}</div></section>
-          </div>
-        </div>}
-
-        {page === "Safety & Alerts" && <div className="page-stack">
-          <div className="info-banner"><RadioTower size={19}/><div><strong>Simulated monitoring data</strong><p>These events are generated in software. No physical sensors, CCTV, or access-control devices are connected.</p></div></div>
-          <section className="panel"><SectionHeading eyebrow="EVENT MONITORING" title="Safety and security alerts" subtitle="Review alerts, acknowledge them, or create an incident for follow-up." action={<button className="button primary" onClick={()=>setPage("Sensor Simulator")}><RadioTower size={16}/> Generate event</button>} />
-            {filteredAlerts.length===0 ? <div className="empty-state">No matching alerts. Try another building filter or generate a demo event.</div> : <div className="alert-list">{filteredAlerts.map((a)=><div className="alert-card" key={a.id}><div className={`alert-symbol ${a.severity.toLowerCase()}`}><AlertTriangle size={20}/></div><div className="alert-content"><div className="alert-title-row"><h3>{a.title}</h3><StatusPill>{a.severity}</StatusPill><StatusPill>{a.status}</StatusPill></div><p>{buildingName(a.buildingId)} · {a.area}</p><p className="alert-detail">{a.detail}</p><small>{a.id} · {fmt(a.time)} · {a.source}</small></div><div className="alert-actions">{a.status==="Open"&&<button className="button secondary small" onClick={()=>acknowledgeAlert(a.id)}><Check size={14}/> Acknowledge</button>}<button className="button secondary small" onClick={()=>makeIncidentFromAlert(a)}><Plus size={14}/> Create incident</button></div></div>)}</div>}
-          </section>
-          <section className="panel"><SectionHeading eyebrow="LATEST READINGS" title="Sensor telemetry" subtitle="Most recent sample readings; values are simulated." />
-            <div className="responsive-table"><table><thead><tr><th>Building / area</th><th>Measurement</th><th>Reading</th><th>Demo threshold</th><th>Source</th><th>Time</th></tr></thead><tbody>{data.readings.filter(matchesBuilding).filter((r)=>`${r.area} ${r.type} ${buildingName(r.buildingId)}`.toLowerCase().includes(search.toLowerCase())).slice(0,12).map((r)=><tr key={r.id}><td><strong>{buildingName(r.buildingId)}</strong><small>{r.area}</small></td><td>{r.type}</td><td><strong className={r.value>r.threshold?"danger-text":""}>{r.value}{r.unit}</strong></td><td>{r.threshold}{r.unit}</td><td><span className="source-tag">{r.source}</span></td><td>{fmt(r.time)}</td></tr>)}</tbody></table></div>
-          </section>
-        </div>}
-
-        {page === "Incidents" && <div className="page-stack"><section className="panel"><SectionHeading eyebrow="RESPONSE TRACKING" title="Incident register" subtitle="SOS reports and alerts that need review or follow-up." action={<button className="button secondary" onClick={()=>setModal("sos")}><Siren size={16}/> New SOS report</button>} />
-          <div className="inline-filters"><label>Status <select value={incidentFilter} onChange={(e)=>setIncidentFilter(e.target.value)}><option>All</option><option>Open</option><option>In review</option><option>Closed</option></select></label></div>
-          <div className="record-list">{filteredIncidents.map((i)=><div className="incident-row" key={i.id}><div className={`record-icon ${i.priority.toLowerCase()}`}><ClipboardList size={18}/></div><div className="record-main"><div className="record-title-line"><strong>{i.title}</strong><StatusPill>{i.priority}</StatusPill><StatusPill>{i.status}</StatusPill></div><p>{buildingName(i.buildingId)} · {i.category}</p><p>{i.description}</p><small>{i.id} · {fmt(i.time)}</small></div><div className="record-controls">{i.status!=="Closed"&&<select aria-label={`Update status ${i.id}`} value={i.status} onChange={(e)=>updateStatus("incidents",i.id,e.target.value)}><option>Open</option><option>In review</option><option>Closed</option></select>}</div></div>)}</div>
-          {filteredIncidents.length===0&&<div className="empty-state">No matching incidents.</div>}</section></div>}
-
-        {page === "Maintenance" && <div className="page-stack"><section className="panel"><SectionHeading eyebrow="FACILITIES MANAGEMENT" title="Maintenance requests" subtitle="Track a repair from reporting through completion." action={<button className="button primary" onClick={()=>setModal("maintenance")}><Plus size={16}/> New request</button>} />
-          <div className="inline-filters"><label>Status <select value={maintenanceFilter} onChange={(e)=>setMaintenanceFilter(e.target.value)}><option>All</option><option>Pending</option><option>In progress</option><option>Completed</option></select></label></div>
-          <div className="record-list">{filteredMaintenance.map((m)=><div className="incident-row" key={m.id}><div className="record-icon green"><Wrench size={18}/></div><div className="record-main"><div className="record-title-line"><strong>{m.title}</strong><StatusPill>{m.priority}</StatusPill><StatusPill>{m.status}</StatusPill></div><p>{buildingName(m.buildingId)} · {m.category}</p><p>{m.description}</p>{m.photoName&&<small><Camera size={13}/> Photo attached: {m.photoName} (name only in demo)</small>}<small>{m.id} · {fmt(m.time)}</small></div><div className="record-controls">{m.status!=="Completed"&&<select aria-label={`Update maintenance ${m.id}`} value={m.status} onChange={(e)=>updateStatus("maintenance",m.id,e.target.value)}><option>Pending</option><option>In progress</option><option>Completed</option></select>}</div></div>)}</div>
-          {filteredMaintenance.length===0&&<div className="empty-state">No matching maintenance requests.</div>}</section></div>}
-
-        {page === "Visitors & Access" && <div className="page-stack"><div className="two-column"><section className="panel"><SectionHeading eyebrow="FRONT DESK" title="Visitor log" subtitle="Use fictional demo details only." action={<button className="button primary" onClick={()=>setModal("visitor")}><Plus size={16}/> Check in</button>} />
-          <div className="record-list">{filteredVisitors.map((v)=><div className="visitor-row" key={v.id}><div className="avatar visitor-avatar">{v.name.split(" ").map(x=>x[0]).slice(0,2).join("")}</div><div className="record-main"><strong>{v.name}</strong><p>{v.organization||"No organization"} · {buildingName(v.buildingId)}</p><small>{v.purpose} · In: {fmt(v.checkIn)}</small>{v.checkOut&&<small>Out: {fmt(v.checkOut)}</small>}</div>{v.checkOut?<StatusPill>Checked out</StatusPill>:<button className="button secondary small" onClick={()=>checkOutVisitor(v)}><LogOut size={14}/> Check out</button>}</div>)}</div>
-          {filteredVisitors.length===0&&<div className="empty-state">No visitor records found.</div>}</section>
-          <section className="panel"><SectionHeading eyebrow="SECURITY AUDIT" title="Access event log" subtitle="Sample events for review." /><div className="record-list">{filteredLogs.slice(0,12).map((l)=><div className="record-row" key={l.id}><div className="record-icon purple"><ShieldAlert size={17}/></div><div className="record-main"><strong>{l.event}</strong><p>{buildingName(l.buildingId)} · {l.zone}</p><small>{fmt(l.time)}</small></div></div>)}</div></section></div></div>}
-
-        {page === "Sensor Simulator" && <div className="page-stack">
-          <div className="info-banner"><RadioTower size={20}/><div><strong>Software-only IoT demonstration</strong><p>Use the controls to generate sample telemetry and events. This does not connect to a real sensor, camera, or emergency service.</p></div></div>
-          <div className="two-column"><section className="panel"><SectionHeading eyebrow="TELEMETRY TEST" title="Simulate a sensor reading" subtitle="Readings are saved to this browser demo and shown in Safety & Alerts." />
-            <form className="form-stack" onSubmit={(e)=>{e.preventDefault();generateSensorEvent();}}>
-              <label>Building<select value={sensorBuilding} onChange={(e)=>setSensorBuilding(e.target.value)}>{BUILDINGS.map((b)=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label>
-              <label>Area / zone<input value={sensorArea} onChange={(e)=>setSensorArea(e.target.value)} placeholder="e.g. Second-floor corridor"/></label>
-              <label>Measurement<select value={sensorType} onChange={(e)=>setSensorType(e.target.value)}><option>Temperature</option><option>Humidity</option><option>Equipment status</option></select></label>
-              <label>Simulated reading <strong className="range-value">{sensorValue}{sensorType==="Temperature"?"°C":sensorType==="Humidity"?"%":" units"}</strong><input type="range" min={sensorType==="Temperature"?10:0} max={sensorType==="Temperature"?60:100} value={sensorValue} onChange={(e)=>setSensorValue(Number(e.target.value))}/></label>
-              <label>Demo alert threshold<input type="number" value={sensorThreshold} onChange={(e)=>setSensorThreshold(Number(e.target.value))}/></label>
-              <button className="button primary full" type="submit"><Activity size={16}/> Record simulated reading</button>
-            </form>
-          </section>
-          <section className="panel"><SectionHeading eyebrow="SECURITY EVENT" title="Restricted-zone simulation" subtitle="Creates a demo alert and access log entry." />
-            <div className="form-stack">
-              <label>Building<select value={sensorBuilding} onChange={(e)=>setSensorBuilding(e.target.value)}>{BUILDINGS.map((b)=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label>
-              <label>Restricted area<input value={sensorArea} onChange={(e)=>setSensorArea(e.target.value)} placeholder="e.g. Equipment room"/></label>
-              <button className="button secondary full" onClick={generateRestrictedEvent}><ShieldAlert size={16}/> Generate restricted-zone event</button>
-              <div className="privacy-card"><ShieldCheck size={19}/><div><strong>Privacy note</strong><p>This only creates a test event. It does not detect people, access CCTV, or identify anyone.</p></div></div>
-            </div>
-          </section></div>
-          <section className="panel"><SectionHeading eyebrow="LATEST TELEMETRY" title="Recent simulated readings" /><div className="responsive-table"><table><thead><tr><th>Building</th><th>Area</th><th>Type</th><th>Reading</th><th>Threshold</th><th>Time</th></tr></thead><tbody>{data.readings.filter(matchesBuilding).slice(0,10).map((r)=><tr key={r.id}><td>{buildingName(r.buildingId)}</td><td>{r.area}</td><td>{r.type}</td><td className={r.value>r.threshold?"danger-text":""}>{r.value}{r.unit}</td><td>{r.threshold}{r.unit}</td><td>{fmt(r.time)}</td></tr>)}</tbody></table></div></section>
-        </div>}
-
-        {page === "History & Insights" && <div className="page-stack">
-          <div className="stat-grid"><StatCard icon={Activity} label="Readings recorded" value={data.readings.length} note="Stored in this browser" tone="blue"/><StatCard icon={ShieldAlert} label="Security events" value={data.accessLogs.length} note="Visitor and demo access logs" tone="purple"/><StatCard icon={Wrench} label="Completed repairs" value={data.maintenance.filter(m=>m.status==="Completed").length} note="Marked completed in demo" tone="green"/><StatCard icon={Clock3} label="Open SOS / incidents" value={data.incidents.filter(i=>i.status!=="Closed").length} note="Awaiting closure" tone="orange"/></div>
-          <div className="two-column"><section className="panel"><SectionHeading eyebrow="REPEAT ISSUE REVIEW" title="Maintenance by category" subtitle="Counts from the current demo records." />{["Electrical","Structural","Equipment","Plumbing","Other"].map((category)=>{const count=data.maintenance.filter(m=>m.category===category).length;const max=Math.max(1,...["Electrical","Structural","Equipment","Plumbing","Other"].map(c=>data.maintenance.filter(m=>m.category===c).length));return <div className="bar-row" key={category}><div><span>{category}</span><strong>{count}</strong></div><div className="bar-track"><div className="bar-fill" style={{width:`${count/max*100}%`}}/></div></div>})}<p className="footnote">This is a simple count of demo records, not a predictive risk model.</p></section>
-          <section className="panel"><SectionHeading eyebrow="EVENT HISTORY" title="Recent activity" subtitle="Latest sensor, incident and maintenance actions." /><div className="timeline">{recentActivity.map((a)=><div className="timeline-item" key={a.id}><span className="timeline-dot"/><div><p>{a.text}</p><small>{fmt(a.time)}</small></div></div>)}</div></section></div>
-          <section className="panel"><SectionHeading eyebrow="DATA CONTROL" title="Demo data management" subtitle="Records are saved in localStorage in this browser only." action={<button className="button secondary" onClick={()=>{if(window.confirm("Reset all CampusShield demo records to the original sample data?")){setData(seed);setToast("Demo data reset.");}}}><History size={15}/> Reset demo data</button>} /><div className="privacy-card"><HardDrive size={20}/><div><strong>Local browser storage</strong><p>Other devices do not share this data. Clearing browser storage can remove it. Do not store real personal, security-sensitive, or emergency information here.</p></div></div></section>
-        </div>}
+      <header className="topbar"><div className="breadcrumb"><span>Campus operations</span><ChevronRight size={14}/><b>{page}</b></div><div className="top-actions"><span className="live-label"><span className="online-dot"/> {isDemo?'DEMO MODE':'PORTAL ACTIVE'}</span><button className="icon-btn" title="Refresh data" onClick={refreshData}><RefreshCw size={17}/></button><div className="top-avatar">{(user.full_name||'U').slice(0,1).toUpperCase()}</div></div></header>
+      <div className="content-wrap">
+        {error&&<div className="error-banner"><AlertTriangle size={17}/><span>{error}</span><button onClick={()=>setError('')}><X size={16}/></button></div>}
+        {isDemo&&<div className="demo-banner"><CircleHelp size={17}/><span><b>Demo preview:</b> changes stay in this browser session. Set up Supabase for real accounts and shared data.</span><button onClick={()=>setDemoUser(null)}>Exit demo</button></div>}
+        {page==='Overview'&&<Overview role={role} user={user} requests={myRequests} alerts={alerts} buildings={BUILDINGS} buildingHealth={buildingHealth} onNavigate={setPage} onNew={()=>setShowRequest(true)} />}
+        {(page==='My requests'||page==='Work orders')&&<WorkOrders role={role} requests={filteredRequests} search={search} setSearch={setSearch} onNew={()=>setShowRequest(true)} onUpdate={updateRequest} user={user} />}
+        {page==='Campus Pulse'&&<CampusPulse buildings={BUILDINGS} health={buildingHealth} requests={requests} alerts={alerts} onAlert={createAlert} role={role} />}
+        {page==='Alerts & incidents'&&<AlertsPage alerts={alerts} role={role} onUpdate={updateAlert} onAlert={createAlert} />}
+        {page==='Visitors'&&<VisitorsPage visitors={visitors} onAdd={addVisitor} onCheckout={checkoutVisitor} />}
+        {page==='Assets & QR'&&<AssetsPage assets={assets} setAssets={setAssets} role={role} />}
+        {page==='Insights'&&<Insights requests={requests} alerts={alerts} buildings={BUILDINGS} health={buildingHealth} />}
       </div>
-      <footer className="footer"><span>CampusShield prototype · TechTrix’26</span><span><span className="pulse-dot"/> Simulated data only</span></footer>
+      <footer className="footer"><span>CampusShield · TechTrix’26 prototype</span><span>Sensor readings in this prototype are simulated.</span></footer>
     </main>
-
-    {modal && <div className="modal-backdrop" onClick={()=>setModal("")}><div className="modal" onClick={(e)=>e.stopPropagation()}>
-      <div className="modal-header"><div><p className="eyebrow">CAMPUSSHIELD DEMO</p><h2>{modal==="sos"?"Report an SOS incident":modal==="maintenance"?"Create maintenance request":"Visitor check-in"}</h2></div><button className="icon-button" onClick={()=>setModal("")}><X size={19}/></button></div>
-      {modal==="sos"&&<form className="form-stack" onSubmit={submitSos}><div className="warning-note"><Siren size={18}/><span>Demo only: this does not contact emergency services or share live location. For a real emergency, use the appropriate local emergency service.</span></div><label>Building<select value={sosBuilding} onChange={(e)=>setSosBuilding(e.target.value)}>{BUILDINGS.map((b)=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label><label>Area / location<input value={sosArea} onChange={(e)=>setSosArea(e.target.value)} placeholder="e.g. ground-floor corridor"/></label><label>Describe the demo incident<textarea value={sosDescription} onChange={(e)=>setSosDescription(e.target.value)} placeholder="Use fictional test details" required rows={3}/></label><button className="button primary full" type="submit"><Siren size={16}/> Create demo SOS record</button></form>}
-      {modal==="maintenance"&&<form className="form-stack" onSubmit={submitMaintenance}><label>Building<select value={maintenanceForm.buildingId} onChange={(e)=>setMaintenanceForm({...maintenanceForm,buildingId:e.target.value})}>{BUILDINGS.map((b)=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label><label>Issue title<input value={maintenanceForm.title} onChange={(e)=>setMaintenanceForm({...maintenanceForm,title:e.target.value})} placeholder="e.g. Corridor light fault" required/></label><div className="form-two"><label>Category<select value={maintenanceForm.category} onChange={(e)=>setMaintenanceForm({...maintenanceForm,category:e.target.value})}><option>Electrical</option><option>Structural</option><option>Equipment</option><option>Plumbing</option><option>Other</option></select></label><label>Priority<select value={maintenanceForm.priority} onChange={(e)=>setMaintenanceForm({...maintenanceForm,priority:e.target.value})}><option>Low</option><option>Medium</option><option>High</option></select></label></div><label>Description<textarea rows={3} value={maintenanceForm.description} onChange={(e)=>setMaintenanceForm({...maintenanceForm,description:e.target.value})} placeholder="Describe the sample issue"/></label><label>Inspection photo (optional)<input type="file" accept="image/png,image/jpeg,image/webp" onChange={(e)=>{const f=e.target.files?.[0];if(f&&f.size>3*1024*1024){setToast("Choose an image smaller than 3 MB.");e.target.value="";return;}setMaintenanceForm({...maintenanceForm,photoName:f?f.name:""});}}/><small className="field-help">Prototype stores the filename only, not the image bytes. Secure image upload needs backend storage.</small></label><button className="button primary full" type="submit"><Plus size={16}/> Create request</button></form>}
-      {modal==="visitor"&&<form className="form-stack" onSubmit={submitVisitor}><label>Visitor display name<input value={visitorForm.name} onChange={(e)=>setVisitorForm({...visitorForm,name:e.target.value})} placeholder="Use a fictional name" required/></label><label>Organization<input value={visitorForm.organization} onChange={(e)=>setVisitorForm({...visitorForm,organization:e.target.value})} placeholder="Optional"/></label><label>Destination building<select value={visitorForm.buildingId} onChange={(e)=>setVisitorForm({...visitorForm,buildingId:e.target.value})}>{BUILDINGS.map((b)=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label><label>Purpose<select value={visitorForm.purpose} onChange={(e)=>setVisitorForm({...visitorForm,purpose:e.target.value})}><option>Meeting</option><option>Maintenance visit</option><option>Event</option><option>Other</option></select></label><div className="warning-note"><ShieldCheck size={17}/><span>Use fictional information in this public prototype.</span></div><button className="button primary full" type="submit"><Check size={16}/> Record check-in</button></form>}
-    </div></div>}
+    {showRequest&&<RequestModal onClose={()=>setShowRequest(false)} onSubmit={createRequest}/>}
     {toast&&<div className="toast"><CheckCircle2 size={18}/>{toast}</div>}
   </div>;
 }
+
+function navIcon(n){return ({Overview:LayoutDashboard,'My requests':ClipboardList,'Work orders':Wrench,'Campus Pulse':MapPinned,'Alerts & incidents':ShieldAlert,Visitors:Users,'Assets & QR':QrCode,Insights:Activity})[n]||LayoutDashboard;}
+function AuthScreen({onSignIn,onSignUp,onDemo,error,setError,configured,loading}){
+ const [mode,setMode]=useState('login');
+ return <div className="auth-screen"><div className="auth-left"><div className="brand auth-brand"><div className="brand-mark"><ShieldCheck size={24}/></div><div><b>CampusShield</b><small>SMART CAMPUS OPERATIONS</small></div></div><div className="auth-copy"><div className="eyebrow light">SAFER BUILDINGS. SMARTER CAMPUSES.</div><h1>Every campus issue,<br/><em>one clear response.</em></h1><p>A shared workspace for student reports, maintenance teams, security alerts and campus operations.</p><div className="auth-highlights"><span><CheckCircle2/> Maintenance tracking</span><span><CheckCircle2/> Safety alerts</span><span><CheckCircle2/> Building health insights</span></div></div><div className="auth-bottom">A campus operations prototype · TechTrix’26</div></div><div className="auth-right"><form className="auth-card" onSubmit={mode==='login'?onSignIn:onSignUp}><div className="mobile-brand"><div className="brand-mark"><ShieldCheck/></div><b>CampusShield</b></div><div className="eyebrow">WELCOME TO CAMPUSSHIELD</div><h2>{mode==='login'?'Sign in to your workspace':'Create your account'}</h2><p className="muted">{mode==='login'?'Use your registered campus account to continue.':'New accounts start with the Student role.'}</p>{mode==='signup'&&<label>Full name<input name="name" autoComplete="name" required placeholder="Your full name"/></label>}<label>Email address<input type="email" name="email" autoComplete="email" required placeholder="you@campus.edu"/></label><label>Password<input type="password" name="password" autoComplete={mode==='login'?'current-password':'new-password'} required minLength={8} placeholder="At least 8 characters"/></label>{error&&<div className="form-error">{error}</div>}<button className="primary-btn full" disabled={loading}>{mode==='login'?'Sign in securely':'Create student account'}<ChevronRight size={17}/></button><p className="switch-auth">{mode==='login'?"Don't have an account?":"Already registered?"} <button type="button" onClick={()=>{setError('');setMode(mode==='login'?'signup':'login')}}>{mode==='login'?'Create account':'Sign in'}</button></p><div className="auth-divider"><span>OR TRY A PREVIEW</span></div><div className="demo-grid">{Object.entries(ROLES).map(([key,val])=><button type="button" key={key} onClick={()=>onDemo(DEMO_USERS[key])}><val.icon size={17}/><span>{val.label}</span></button>)}</div><small className="demo-note">Demo mode uses sample data only; it is not authenticated or shared.</small>{!configured&&<div className="setup-hint"><AlertTriangle size={16}/><span>Supabase isn't configured. Demo preview works now; follow <b>SETUP.md</b> to enable real authentication.</span></div>}</form></div></div>
+}
+function Overview({role,user,requests,alerts,buildings,buildingHealth,onNavigate,onNew}){
+ const activeAlerts=alerts.filter(a=>a.status!=='Resolved'); const activeReq=requests.filter(r=>!['Resolved','Completed'].includes(r.status));
+ const title=role==='student'?`Welcome back, ${user.full_name?.split(' ')[0]||'Student'}`:role==='maintenance'?'Maintenance workspace':role==='security'?'Security operations':'Campus overview';
+ const subtitle=ROLES[role]?.intro;
+ return <><div className="page-heading"><div><div className="eyebrow">TUESDAY · CAMPUS OPERATIONS</div><h1>{title}</h1><p>{subtitle}</p></div><div className="heading-actions"><button className="secondary-btn" onClick={()=>onNavigate('Campus Pulse')}><MapPinned size={16}/> Campus Pulse</button>{role==='student'&&<button className="primary-btn" onClick={onNew}><Plus size={17}/> Report an issue</button>}</div></div>
+ <div className="stat-grid"><Stat icon={ClipboardList} label={role==='student'?'My open requests':'Open work orders'} value={activeReq.length} foot={`${requests.length} total requests`} tone="blue"/><Stat icon={ShieldAlert} label="Active alerts" value={activeAlerts.length} foot={`${activeAlerts.filter(a=>a.severity==='High').length} high priority`} tone="red"/><Stat icon={Building2} label="Buildings monitored" value={buildings.length} foot="Campus-wide coverage" tone="purple"/><Stat icon={Gauge} label="Average building health" value={`${Math.round(buildings.reduce((a,b)=>a+buildingHealth(b),0)/buildings.length)}%`} foot="Transparent demo score" tone="green"/></div>
+ <div className="dashboard-grid"><section className="panel wide-panel"><div className="panel-heading"><div><h3>Campus Pulse</h3><p>Building status at a glance</p></div><button className="text-btn" onClick={()=>onNavigate('Campus Pulse')}>Open map <ChevronRight size={15}/></button></div><MiniMap buildings={buildings} health={buildingHealth} alerts={alerts}/><div className="map-legend"><span><i className="dot green"/> Healthy</span><span><i className="dot amber"/> Needs attention</span><span><i className="dot red"/> Critical</span></div></section><section className="panel"><div className="panel-heading"><div><h3>{role==='student'?'My recent requests':'Priority queue'}</h3><p>Latest maintenance activity</p></div><button className="icon-btn" onClick={()=>onNavigate(role==='student'?'My requests':'Work orders')}><ChevronRight size={17}/></button></div><div className="compact-list">{requests.slice(0,4).map(r=><div className="compact-item" key={r.id}><div className={`mini-symbol ${r.priority==='High'?'red-bg':'blue-bg'}`}><Wrench size={16}/></div><div className="compact-copy"><b>{r.title}</b><small>{bName(r.building_id)} · {fmt(r.created_at)}</small></div><Status value={r.status}/></div>)}{!requests.length&&<Empty text="No maintenance requests yet."/>}</div></section></div>
+ <div className="dashboard-grid second-grid"><section className="panel"><div className="panel-heading"><div><h3>Safety & security</h3><p>Latest campus alerts</p></div><button className="text-btn" onClick={()=>onNavigate('Alerts & incidents')}>View alerts <ChevronRight size={15}/></button></div><div className="compact-list">{activeAlerts.slice(0,3).map(a=><div className="compact-item" key={a.id}><div className={`mini-symbol ${a.severity==='High'?'red-bg':'amber-bg'}`}><AlertTriangle size={16}/></div><div className="compact-copy"><b>{a.title}</b><small>{bName(a.building_id)} · {fmt(a.created_at)}</small></div><Status value={a.severity}/></div>)}{!activeAlerts.length&&<Empty text="No active alerts."/>}</div></section><section className="panel quick-panel"><div className="panel-heading"><div><h3>Quick actions</h3><p>Common tasks for your role</p></div></div><div className="quick-actions">{role==='student'&&<button onClick={onNew}><Plus/><span><b>Report a problem</b><small>Send a repair request</small></span><ChevronRight/></button>}{(role==='maintenance'||role==='admin')&&<button onClick={()=>onNavigate('Work orders')}><Wrench/><span><b>Manage work orders</b><small>Assign and update repairs</small></span><ChevronRight/></button>}{(role==='security'||role==='admin')&&<button onClick={()=>onNavigate('Alerts & incidents')}><ShieldAlert/><span><b>Review safety alerts</b><small>Acknowledge and resolve</small></span><ChevronRight/></button>}<button onClick={()=>onNavigate('Assets & QR')}><QrCode/><span><b>Find an asset</b><small>QR equipment directory</small></span><ChevronRight/></button></div></section></div></>;
+}
+function Stat({icon:Icon,label,value,foot,tone}){return <div className="stat-card"><div className={`stat-icon ${tone}`}><Icon size={20}/></div><div className="stat-copy"><span>{label}</span><strong>{value}</strong><small>{foot}</small></div></div>}
+function Status({value}){const v=String(value||'Unknown').toLowerCase().replaceAll(' ','-');return <span className={`status-pill ${v}`}>{value}</span>}
+function MiniMap({buildings,health,alerts}){return <div className="mini-map">{buildings.map(b=>{const score=health(b);const critical=alerts.some(a=>a.building_id===b.id&&a.severity==='High'&&a.status!=='Resolved');return <div key={b.id} className={`map-building ${critical?'critical':score<75?'attention':'healthy'}`} style={{left:`${b.x}%`,top:`${b.y}%`}}><span className="map-pin"><Building2 size={16}/></span><b>{b.short}</b><small>{score}% health</small></div>})}<div className="map-path path-one"/><div className="map-path path-two"/><div className="map-caption">CAMPUS SCHEMATIC · NOT A LIVE GEOLOCATION MAP</div></div>}
+function CampusPulse({buildings,health,requests,alerts,onAlert,role}){return <><div className="page-heading"><div><div className="eyebrow">CAMPUS INTELLIGENCE</div><h1>Campus Pulse</h1><p>Building condition, open repairs and simulated safety events in one view.</p></div>{['admin','security'].includes(role)&&<button className="primary-btn" onClick={()=>onAlert('Manual safety review requested','B1','Main corridor','Medium','Created by authorized staff for review.') }><Plus size={16}/> Create alert</button>}</div><div className="pulse-layout"><section className="panel map-panel"><div className="panel-heading"><div><h3>Campus map</h3><p>Select a building card to review its health</p></div><span className="sim-chip"><RadioTower size={13}/> SIMULATED FEEDS</span></div><MiniMap buildings={buildings} health={health} alerts={alerts}/><div className="map-legend"><span><i className="dot green"/> Healthy</span><span><i className="dot amber"/> Attention</span><span><i className="dot red"/> Critical alert</span></div></section><section className="panel"><div className="panel-heading"><div><h3>Building health</h3><p>Calculated from current demo issues</p></div></div><div className="health-list">{buildings.map(b=>{const score=health(b);const open=requests.filter(r=>r.building_id===b.id&&!['Resolved','Completed'].includes(r.status)).length;const count=alerts.filter(a=>a.building_id===b.id&&a.status!=='Resolved').length;return <div className="health-row" key={b.id}><div className="health-row-top"><div><b>{b.name}</b><small>{open} open repairs · {count} active alerts</small></div><strong className={score<60?'danger-text':score<80?'warning-text':'good-text'}>{score}%</strong></div><div className="progress-track"><span className={score<60?'danger-fill':score<80?'warning-fill':'good-fill'} style={{width:`${score}%`}}/></div></div>})}</div></section></div><section className="panel pulse-alerts"><div className="panel-heading"><div><h3>Current campus alerts</h3><p>Simulated events are labelled and do not connect to hardware.</p></div></div><AlertsTable alerts={alerts.slice(0,5)} role={role} onUpdate={()=>{}}/></section></>}
+function WorkOrders({role,requests,search,setSearch,onNew,onUpdate,user}){const staff=['maintenance','admin'].includes(role);return <><div className="page-heading"><div><div className="eyebrow">FACILITIES & REPAIRS</div><h1>{role==='student'?'My maintenance requests':'Maintenance work orders'}</h1><p>{role==='student'?'Track the progress of issues you reported.':'Review priorities, assign ownership and keep repair status up to date.'}</p></div>{role==='student'&&<button className="primary-btn" onClick={onNew}><Plus size={17}/> New request</button>}</div><div className="stat-grid small-stats"><Stat icon={ClipboardList} label="Total shown" value={requests.length} foot="Requests in this view" tone="blue"/><Stat icon={Clock3} label="Pending" value={requests.filter(r=>r.status==='Pending').length} foot="Awaiting assignment" tone="amber"/><Stat icon={Activity} label="In progress" value={requests.filter(r=>r.status==='In progress').length} foot="Work underway" tone="purple"/><Stat icon={CheckCircle2} label="Resolved" value={requests.filter(r=>['Resolved','Completed'].includes(r.status)).length} foot="Completed requests" tone="green"/></div><section className="panel table-panel"><div className="table-toolbar"><div><h3>Request register</h3><p>Each record includes its current status and priority.</p></div><div className="search-box"><Search size={16}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search requests…"/></div></div>{requests.length?<div className="table-scroll"><table><thead><tr><th>Request</th><th>Building / area</th><th>Priority</th><th>Status</th><th>Reported</th>{staff&&<th>Workflow</th>}</tr></thead><tbody>{requests.map(r=><tr key={r.id}><td><b>{r.title}</b><small className="table-sub">{r.id} · {r.category}</small><span className="description-cell">{r.description}</span></td><td>{bName(r.building_id)}<small className="table-sub">{r.area}</small></td><td><Status value={r.priority}/></td><td><Status value={r.status}/></td><td>{fmt(r.created_at)}<small className="table-sub">{r.reporter_name||'Campus user'}</small></td>{staff&&<td><div className="workflow-controls"><select aria-label="Assign staff" value={r.assigned_to||''} onChange={e=>onUpdate(r,{assigned_to:e.target.value})}><option value="">Unassigned</option><option>Maintenance Team</option><option>Electrical Team</option><option>Plumbing Team</option><option>Facilities Supervisor</option></select><select aria-label="Update status" value={r.status} onChange={e=>onUpdate(r,{status:e.target.value})}><option>Pending</option><option>Assigned</option><option>In progress</option><option>Resolved</option></select></div></td>}</tr>)}</tbody></table></div>:<Empty text="No matching requests. Submit a new maintenance request to get started."/>}</section></>}
+function AlertsPage({alerts,role,onUpdate,onAlert}){return <><div className="page-heading"><div><div className="eyebrow">SAFETY & SECURITY</div><h1>Alerts & incidents</h1><p>Review events, acknowledge alerts and maintain a clear incident status.</p></div>{['admin','security'].includes(role)&&<button className="primary-btn" onClick={()=>onAlert('Staff-created safety alert','B5','Reception','Medium','Staff-created alert. Review details before acting.') }><Plus size={16}/> Create alert</button>}</div><div className="stat-grid small-stats"><Stat icon={Bell} label="Active alerts" value={alerts.filter(a=>a.status!=='Resolved').length} foot="Not yet resolved" tone="blue"/><Stat icon={AlertTriangle} label="High severity" value={alerts.filter(a=>a.severity==='High'&&a.status!=='Resolved').length} foot="Review promptly" tone="red"/><Stat icon={CheckCircle2} label="Acknowledged" value={alerts.filter(a=>a.status==='Acknowledged').length} foot="Seen by staff" tone="green"/><Stat icon={RadioTower} label="Simulated sources" value={alerts.filter(a=>a.source==='SIMULATED'||a.source==='SIMULATION').length} foot="No hardware connected" tone="purple"/></div><section className="panel table-panel"><div className="panel-heading"><div><h3>Alert register</h3><p>Sample sensor/access events are explicitly marked simulated.</p></div></div><AlertsTable alerts={alerts} role={role} onUpdate={onUpdate}/></section></>}
+function AlertsTable({alerts,role,onUpdate}){const canAct=['security','admin'].includes(role);return <div className="alert-list">{alerts.map(a=><div className="alert-row" key={a.id}><div className={`alert-icon ${a.severity==='High'?'red-bg':'amber-bg'}`}><AlertTriangle size={19}/></div><div className="alert-detail"><div className="alert-title"><b>{a.title}</b><Status value={a.severity}/></div><p>{a.detail}</p><small>{bName(a.building_id)} · {a.area} · {fmt(a.created_at)} · <span className="sim-label">{a.source||'SIMULATED'}</span></small></div><div className="alert-actions"><Status value={a.status}/>{canAct&&a.status!=='Resolved'&&<select aria-label="Alert status" value={a.status} onChange={e=>onUpdate(a,{status:e.target.value})}><option>Open</option><option>Acknowledged</option><option>Resolved</option></select>}</div></div>)}{!alerts.length&&<Empty text="No alerts to display."/>}</div>}
+function VisitorsPage({visitors,onAdd,onCheckout}){const [form,setForm]=useState({name:'',organization:'',building_id:'B5',purpose:'Meeting'});return <><div className="page-heading"><div><div className="eyebrow">FRONT DESK & ACCESS LOG</div><h1>Visitor register</h1><p>Record visitor entry and exit for the demo campus.</p></div></div><div className="two-column"><section className="panel"><div className="panel-heading"><div><h3>Check in a visitor</h3><p>Collect only the information needed for the visit.</p></div></div><form className="stack-form" onSubmit={e=>{e.preventDefault();onAdd(form);setForm({name:'',organization:'',building_id:'B5',purpose:'Meeting'})}}><label>Visitor name<input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Full name"/></label><label>Organization<input value={form.organization} onChange={e=>setForm({...form,organization:e.target.value})} placeholder="Company or guest"/></label><label>Destination<select value={form.building_id} onChange={e=>setForm({...form,building_id:e.target.value})}>{BUILDINGS.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label><label>Purpose<input required value={form.purpose} onChange={e=>setForm({...form,purpose:e.target.value})} placeholder="Meeting, delivery…"/></label><button className="primary-btn full"><Check size={16}/> Record check-in</button></form></section><section className="panel"><div className="panel-heading"><div><h3>Visitor log</h3><p>{visitors.filter(v=>!v.checked_out).length} currently checked in (demo records included).</p></div></div><div className="compact-list">{visitors.map(v=><div className="visitor-item" key={v.id}><div className="avatar visitor-avatar">{v.name.slice(0,1).toUpperCase()}</div><div className="compact-copy"><b>{v.name}</b><small>{v.organization||'Guest'} · {bName(v.building_id)}</small><small>{v.purpose} · {fmt(v.created_at||v.check_in)}</small></div><div className="visitor-status">{v.checked_out?<Status value="Checked out"/>:<><Status value="Checked in"/><button className="small-btn" onClick={()=>onCheckout(v)}>Check out</button></>}</div></div>)}{!visitors.length&&<Empty text="No visitors recorded."/>}</div></section></div></>}
+function AssetsPage({assets,setAssets,role}){const [selected,setSelected]=useState(assets[0]?.id||'');const [query,setQuery]=useState('');const [showAdd,setShowAdd]=useState(false);const [form,setForm]=useState({name:'',building_id:'B1',area:'',category:'Equipment'});const visible=assets.filter(a=>`${a.name} ${a.area} ${a.category} ${bName(a.building_id)}`.toLowerCase().includes(query.toLowerCase()));const asset=assets.find(a=>a.id===selected)||visible[0];return <><div className="page-heading"><div><div className="eyebrow">EQUIPMENT DIRECTORY</div><h1>Assets & QR</h1><p>Use a QR code to open an asset record and pre-fill a maintenance report.</p></div>{['admin','maintenance'].includes(role)&&<button className="primary-btn" onClick={()=>setShowAdd(v=>!v)}><Plus size={16}/> Add asset</button>}</div><div className="asset-layout"><section className="panel"><div className="search-box asset-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Find an asset…"/></div><div className="asset-list">{visible.map(a=><button key={a.id} className={`asset-list-item ${asset?.id===a.id?'selected':''}`} onClick={()=>setSelected(a.id)}><div className="asset-symbol"><Building2 size={18}/></div><div><b>{a.name}</b><small>{bName(a.building_id)} · {a.area}</small></div><ChevronRight size={16}/></button>)}{!visible.length&&<Empty text="No matching assets."/>}</div></section>{asset&&<section className="panel asset-detail"><div className="asset-detail-head"><div className="asset-symbol large"><QrCode size={24}/></div><div><div className="eyebrow">ASSET ID · {asset.id}</div><h2>{asset.name}</h2><p>{bName(asset.building_id)} · {asset.area}</p></div></div><div className="asset-meta"><div><small>Category</small><b>{asset.category}</b></div><div><small>Condition</small><b>{asset.status||'Registered'}</b></div></div><div className="qr-wrap"><QRCodeSVG value={`${typeof window!=='undefined'?window.location.origin:''}/?asset=${encodeURIComponent(asset.id)}`} size={164} level="M" includeMargin/><b>Scan to identify asset</b><small>QR code points to this site's asset ID.</small></div><p className="muted qr-explain">On a deployed site, scan the code to open this app and select the asset. Add a maintenance request using the asset's building and location.</p></section>}</div>{showAdd&&<form className="panel add-asset-form" onSubmit={e=>{e.preventDefault();const next={id:uid('AST'),...form,status:'Registered'};setAssets(old=>[next,...old]);setSelected(next.id);setShowAdd(false);setForm({name:'',building_id:'B1',area:'',category:'Equipment'})}}><h3>Add campus asset</h3><div className="form-grid"><label>Asset name<input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})}/></label><label>Building<select value={form.building_id} onChange={e=>setForm({...form,building_id:e.target.value})}>{BUILDINGS.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label><label>Area / location<input required value={form.area} onChange={e=>setForm({...form,area:e.target.value})}/></label><label>Category<select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>{['Equipment','Electrical','HVAC','Safety','Plumbing','AV equipment','Structural'].map(c=><option key={c}>{c}</option>)}</select></label></div><button className="primary-btn">Save asset</button></form>}</>}
+function Insights({requests,alerts,buildings,health}){const categories=['Electrical','Plumbing','Equipment','Structural','HVAC','Safety'];return <><div className="page-heading"><div><div className="eyebrow">OPERATIONS ANALYTICS</div><h1>Insights & building health</h1><p>Understand the workload and condition indicators behind the overview.</p></div></div><div className="stat-grid"><Stat icon={ClipboardList} label="Total work orders" value={requests.length} foot="All statuses" tone="blue"/><Stat icon={Clock3} label="Open work orders" value={requests.filter(r=>!['Resolved','Completed'].includes(r.status)).length} foot="Needs follow-up" tone="amber"/><Stat icon={ShieldAlert} label="Unresolved alerts" value={alerts.filter(a=>a.status!=='Resolved').length} foot="Sample and created events" tone="red"/><Stat icon={Gauge} label="Average health" value={`${Math.round(buildings.reduce((s,b)=>s+health(b),0)/buildings.length)}%`} foot="Transparent rule-based score" tone="green"/></div><div className="two-column"><section className="panel"><div className="panel-heading"><div><h3>Requests by category</h3><p>Count of current maintenance records</p></div></div><div className="bar-chart">{categories.map(c=>{const n=requests.filter(r=>r.category===c).length;const max=Math.max(1,...categories.map(k=>requests.filter(r=>r.category===k).length));return <div className="bar-row" key={c}><span>{c}</span><div className="bar-track"><i style={{width:`${Math.max(n?6:0,n/max*100)}%`}}/></div><b>{n}</b></div>})}</div></section><section className="panel"><div className="panel-heading"><div><h3>Building condition</h3><p>Score = 100 minus issue penalties; minimum 28.</p></div></div><div className="health-list">{buildings.map(b=><div className="health-row" key={b.id}><div className="health-row-top"><div><b>{b.name}</b><small>Open items affect score</small></div><strong className={health(b)<60?'danger-text':health(b)<80?'warning-text':'good-text'}>{health(b)}%</strong></div><div className="progress-track"><span className={health(b)<60?'danger-fill':health(b)<80?'warning-fill':'good-fill'} style={{width:`${health(b)}%`}}/></div></div>)}</div></section></div><div className="info-note"><CircleHelp size={18}/><p><b>How to interpret this:</b> building health is a prototype heuristic, not an engineering inspection or certified safety rating. Sensor data is simulated. A production system should validate scores against real inspection and sensor data.</p></div></>}
+function RequestModal({onClose,onSubmit}){const [form,setForm]=useState({title:'',building_id:'B1',area:'',category:'Electrical',priority:'Medium',description:''});return <div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><form className="modal-card" onSubmit={e=>{e.preventDefault();onSubmit(form)}}><div className="modal-heading"><div><div className="eyebrow">FACILITIES HELP DESK</div><h2>Report a campus issue</h2><p>Provide enough detail for staff to locate and assess it.</p></div><button type="button" className="icon-btn" onClick={onClose}><X/></button></div><label>Issue title<input required value={form.title} onChange={e=>setForm({...form,title:e.target.value})} placeholder="e.g. Broken classroom light"/></label><div className="form-grid"><label>Building<select value={form.building_id} onChange={e=>setForm({...form,building_id:e.target.value})}>{BUILDINGS.map(b=><option key={b.id} value={b.id}>{b.name}</option>)}</select></label><label>Area / room<input required value={form.area} onChange={e=>setForm({...form,area:e.target.value})} placeholder="Room or location"/></label><label>Category<select value={form.category} onChange={e=>setForm({...form,category:e.target.value})}>{['Electrical','Plumbing','Equipment','Structural','HVAC','Safety','Cleaning','Other'].map(c=><option key={c}>{c}</option>)}</select></label><label>Priority<select value={form.priority} onChange={e=>setForm({...form,priority:e.target.value})}>{['Low','Medium','High'].map(c=><option key={c}>{c}</option>)}</select></label></div><label>Description<textarea required rows="3" value={form.description} onChange={e=>setForm({...form,description:e.target.value})} placeholder="What happened? Is anything currently unsafe?"/></label><div className="modal-note"><Shield size={16}/> Do not use this prototype as an emergency service. Contact campus security or local emergency services for immediate danger.</div><div className="modal-actions"><button type="button" className="secondary-btn" onClick={onClose}>Cancel</button><button className="primary-btn"><Send size={16}/> Submit request</button></div></form></div>}
+function Empty({text}){return <div className="empty-state"><div><ClipboardList size={20}/></div><p>{text}</p></div>}
