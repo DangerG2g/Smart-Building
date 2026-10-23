@@ -1,20 +1,8 @@
-# SurakshaHub account signup update
+# Account setup notes
 
-## Signup behavior
-- Student/User, Staff, and Administrator portals all offer email + password account creation.
-- Full name is required; Institution ID is optional and can be added later.
-- Signup saves `full_name`, `institution_id`, and `requested_portal` in Supabase Auth user metadata.
-- Passwords are handled by Supabase Auth and are not stored by this application.
-- Email confirmation may be required depending on Supabase Authentication settings.
-
-## Important role security
-Selecting Staff or Administrator during signup DOES NOT grant that role. The requested portal is untrusted user metadata. A trusted administrator must grant staff/admin permissions using the project's secure database role mechanism. Do not make a public signup form assign privileged roles. The current profile trigger/schema may assign new profiles the default `student` role until role assignment is implemented.
-
-## Supabase and password reset
-- Configure `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Vercel.
-- In Supabase Authentication > URL Configuration, set Site URL to the deployed Vercel domain, not `http://localhost:3000`.
-- Add the deployed domain and the recovery redirect path to Redirect URLs.
-- Test a fresh recovery email after saving URL configuration.
-
-## Build
-Run `npm install` then `npm run build` before deploying. Check the Vercel build output after deployment.
+- Student/User, Staff, and Administrator portal selections support email/password account creation.
+- Institution ID is optional; leave it blank to add it later.
+- For security, public signup always creates a `student` role. A staff/admin portal choice is only a request and never grants elevated permissions.
+- To approve staff/admin access, verify the person first, then update `public.profiles.role` from the Supabase SQL Editor using that user's Auth UUID.
+- Password recovery links must use the deployed Vercel URL in Supabase Authentication → URL Configuration.
+- Never put a Supabase service-role/secret key in frontend code or Vercel `VITE_` variables.

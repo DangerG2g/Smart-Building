@@ -1,16 +1,9 @@
-# SurakshaHub: email/password login setup
+# SurakshaHub: all-portal email/password account setup
 
-## Login behavior
-- Student/User: email + password; public signup and forgot-password are available.
-- Staff: email + password for a staff account created in Supabase Authentication. Institute/staff ID is intentionally postponed and can be added to the profile later.
-- Administrator: email + password for an administrator account created and provisioned by the project owner. Selecting the Administrator portal does not grant admin permissions.
-
-## Supabase setup
-1. Ensure the project's schema has been run using `supabase/schema.sql`.
-2. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in your hosting provider and redeploy. Never put a service-role/secret key in frontend environment variables.
-3. Create staff and administrator accounts through Supabase Authentication → Users (or use the student signup flow for student accounts). Use real email addresses and strong passwords.
-4. Add trusted role assignment and database Row Level Security policies before giving staff/admin accounts access to restricted data. Portal selection is only a UI choice and is not authorization.
-5. Institute ID can be added later as an optional profile field and linked to the appropriate account.
-
-## Important
-This project uses Supabase email/password authentication for all three portals. It no longer depends on the `staff-login` Edge Function or `staff_login_aliases` mapping table. Existing deployments of that function may be removed later if no longer used.
+- Student/User, Staff, and Administrator portal selections all allow email/password account creation.
+- Institution ID is optional and can be supplied during signup or left blank for later.
+- **Security:** every public signup receives the default `student` role. Selecting Staff or Administrator does not grant elevated access. A trusted project owner must approve and assign the appropriate role in `public.profiles`.
+- Staff use email/password for now; the older staff-ID Edge Function is not required by this login UI.
+- Password reset uses Supabase Auth. Set Authentication → URL Configuration Site URL and Redirect URLs to the deployed Vercel URL, not just localhost.
+- Run `supabase/schema.sql` in Supabase SQL Editor to add the optional profile institution_id column and the signup trigger update. The schema is designed to be re-runnable; review errors before proceeding.
+- Configure Vercel with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` only. Never put a service-role/secret key in frontend variables.

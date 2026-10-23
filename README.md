@@ -11,7 +11,8 @@ Campus safety, maintenance and building operations prototype built with React + 
 - Visitor check-in/out register for security/admin.
 - Asset directory with generated QR codes.
 - Insights, responsive UI, Vite production build and Vercel deployment support.
-- Real-account-only sign-in/sign-up screen with password-reset email flow. No demo credentials or bypass login are presented.
+- Email/password sign-in and account creation from Student/User, Staff, and Administrator portal selections; optional institution ID is stored on the profile.
+- Password-reset email flow. No demo credentials or bypass login are presented.
 
 ## Important limitations
 - No physical sensors, CCTV, access-control hardware, SMS/email notifications, live GPS, or emergency dispatch integration is included.
@@ -53,7 +54,7 @@ npm run dev
 Open the local URL printed by Vite. Register an account with email/password. If email confirmation is enabled, confirm the email before signing in.
 
 ### 4. Assign roles safely
-Every self-registered user receives the `student` role. A user must never be able to choose their own administrator role from the public signup screen.
+Every self-registered user receives the `student` role, even if they selected Staff or Administrator while requesting an account. Institution ID is optional. A user must never be able to choose their own staff or administrator role from the public signup screen; a trusted project owner must approve role changes.
 
 To promote a trusted account, find that user's UUID in **Authentication → Users**, then run this query in SQL Editor, replacing the UUID and role with a verified account and one of `maintenance`, `security`, or `admin`:
 
