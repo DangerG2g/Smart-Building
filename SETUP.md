@@ -4,7 +4,7 @@
 2. Supabase SQL Editor → run `supabase/schema.sql` in full.
 3. Copy `.env.example` to `.env.local`; set `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` from your Supabase project settings. Use the publishable/anon key only, never the service-role secret.
 4. Run `npm install` then `npm run dev`.
-5. Use any portal selection to create an account with a real email address and password. Institution ID is optional. Public signups always receive the Student role until a trusted project owner assigns staff/admin permissions. If email confirmation is enabled, confirm your email before signing in. New accounts receive the User (`student`) role. Use **Forgot password?** to request a reset link.
+5. Sign up with a real email address. If email confirmation is enabled, confirm your email before signing in. New accounts receive the User (`student`) role. Use **Forgot password?** to request a reset link.
 6. Promote verified staff accounts using Supabase SQL Editor, for example:
    `update public.profiles set role = 'maintenance' where id = 'VERIFIED-USER-UUID';`
    Valid roles: `student`, `maintenance`, `security`, `admin`.

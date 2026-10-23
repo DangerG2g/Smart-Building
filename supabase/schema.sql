@@ -5,24 +5,15 @@ create extension if not exists pgcrypto;
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   full_name text not null default '',
-  institution_id text,
   role text not null default 'student' check (role in ('student','maintenance','security','admin')),
   created_at timestamptz not null default now()
 );
 
--- Safe migration for existing projects: institution ID is optional and may be blank.
-alter table public.profiles add column if not exists institution_id text;
-
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = '' as $$
 begin
-  insert into public.profiles (id, full_name, institution_id, role)
-  values (
-    new.id,
-    coalesce(new.raw_user_meta_data ->> 'full_name',''),
-    nullif(trim(coalesce(new.raw_user_meta_data ->> 'institution_id','')), ''),
-    'student'
-  )
+  insert into public.profiles (id, full_name, role)
+  values (new.id, coalesce(new.raw_user_meta_data ->> 'full_name',''), 'student')
   on conflict (id) do nothing;
   return new;
 end;
@@ -175,3 +166,4 @@ insert into public.assets (id,name,building_id,area,category,status) values
 ('AST-003','Auditorium sound system','B6','Main hall','AV equipment','Operational'),
 ('AST-004','Hostel water pump','B4','Utility room','Plumbing','Operational')
 on conflict (id) do nothing;
+

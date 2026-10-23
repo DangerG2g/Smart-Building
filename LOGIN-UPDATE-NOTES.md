@@ -14,6 +14,3 @@ Requires `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in the Vercel project.
 
 ## Before deployment
 Install dependencies and run `npm run build`. The package has not been verified by a successful production build.
-
-
-Current account setup: Student/User, Staff, and Administrator portal selections all support email/password signup. Institution ID is optional. Every public signup is assigned the Student role until a trusted project owner approves a staff/admin role.
